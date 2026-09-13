@@ -32,6 +32,8 @@ public class SeriesResource : RestResource
     public bool Monitored { get; set; }
     public NewItemMonitorTypes MonitorNewItems { get; set; }
     public bool UseSceneNumbering { get; set; }
+    public EpisodeOrderType EpisodeOrder { get; set; }
+    public string? TmdbEpisodeGroupId { get; set; }
     public int Runtime { get; set; }
     public int TvdbId { get; set; }
     public int TvRageId { get; set; }
@@ -85,6 +87,8 @@ public static class SeriesResourceMapper
             Monitored = model.Monitored,
             MonitorNewItems = model.MonitorNewItems,
             UseSceneNumbering = model.UseSceneNumbering,
+            EpisodeOrder = model.EpisodeOrder,
+            TmdbEpisodeGroupId = model.TmdbEpisodeGroupId,
             Runtime = model.Runtime,
             TvdbId = model.TvdbId,
             TvRageId = model.TvRageId,
@@ -128,6 +132,8 @@ public static class SeriesResourceMapper
             Monitored = resource.Monitored,
             MonitorNewItems = resource.MonitorNewItems,
             UseSceneNumbering = resource.UseSceneNumbering,
+            EpisodeOrder = resource.EpisodeOrder,
+            TmdbEpisodeGroupId = resource.TmdbEpisodeGroupId.IsNullOrWhiteSpace() ? null : resource.TmdbEpisodeGroupId,
             Runtime = resource.Runtime,
             TvdbId = resource.TvdbId,
             TvRageId = resource.TvRageId,

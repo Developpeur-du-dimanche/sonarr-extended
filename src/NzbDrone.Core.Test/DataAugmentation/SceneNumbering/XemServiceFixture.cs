@@ -133,6 +133,24 @@ namespace NzbDrone.Core.Test.DataAugmentation.SceneNumbering
         }
 
         [Test]
+        public void should_clear_scenenumbering_if_episode_order_is_not_tvdb()
+        {
+            GivenTvdbMappings();
+            GivenExistingMapping();
+            _series.EpisodeOrder = EpisodeOrderType.Tmdb;
+
+            Subject.Handle(new SeriesUpdatedEvent(_series));
+
+            Mocker.GetMock<IXemProxy>()
+                  .Verify(v => v.GetSceneTvdbMappings(It.IsAny<int>()), Times.Never());
+
+            Mocker.GetMock<ISeriesService>()
+                  .Verify(v => v.UpdateSeries(It.Is<Series>(s => s.UseSceneNumbering == false), It.IsAny<bool>(), It.IsAny<bool>()), Times.Once());
+
+            _episodes.Should().OnlyContain(e => e.SceneSeasonNumber == null && e.SceneEpisodeNumber == null);
+        }
+
+        [Test]
         public void should_not_clear_scenenumbering_if_no_results_at_all_from_thexem()
         {
             GivenExistingMapping();
