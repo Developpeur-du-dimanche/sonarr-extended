@@ -22,7 +22,7 @@ on:
 
 jobs:
   package:
-    if: github.repository == 'TOomaAh/Sonarr'
+    if: github.repository == 'Developpeur-du-dimanche/sonarr-extended'
     strategy:
       matrix:
         include:
@@ -63,7 +63,7 @@ jobs:
           version: ${{ inputs.version }}
 
   release:
-    if: github.repository == 'TOomaAh/Sonarr'
+    if: github.repository == 'Developpeur-du-dimanche/sonarr-extended'
     needs: package
     runs-on: ubuntu-latest
     permissions:

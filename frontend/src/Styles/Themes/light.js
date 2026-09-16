@@ -1,5 +1,5 @@
-const sonarrBlue = '#35c5f4';
-const sonarrAlternateBlue = '#2193b5';
+const sonarrBlue = '#a855f7';
+const sonarrAlternateBlue = '#9333ea';
 const darkGray = '#888';
 const mediumGray = '#999';
 const gray = '#adadad';
@@ -45,7 +45,7 @@ module.exports = {
   pageFooterBackground: '#f1f1f1',
 
   torrentColor: '#00853d',
-  usenetColor: '#17b1d9',
+  usenetColor: '#9333ea',
 
   // Labels
   inverseLabelColor: '#ddd',
@@ -140,8 +140,8 @@ module.exports = {
   //
   // Toolbar
 
-  toobarButtonHoverColor: '#35c5f4',
-  toobarButtonSelectedColor: '#35c5f4',
+  toobarButtonHoverColor: sonarrBlue,
+  toobarButtonSelectedColor: sonarrBlue,
 
   //
   // Scroller
@@ -164,9 +164,9 @@ module.exports = {
   alertDangerBackgroundColor: '#f2dede',
   alertDangerColor: '#a94442',
 
-  alertInfoBorderColor: '#bce8f1',
-  alertInfoBackgroundColor: '#d9edf7',
-  alertInfoColor: '#31708f',
+  alertInfoBorderColor: '#e9d5ff',
+  alertInfoBackgroundColor: '#f3e8ff',
+  alertInfoColor: '#6b21a8',
 
   alertSuccessBorderColor: '#d6e9c6',
   alertSuccessBackgroundColor: '#dff0d8',

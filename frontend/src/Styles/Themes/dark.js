@@ -1,4 +1,4 @@
-const sonarrBlue = '#35c5f4';
+const sonarrBlue = '#a855f7';
 const darkGray = '#888';
 const mediumGray = '#999';
 const gray = '#adadad';
@@ -35,7 +35,7 @@ module.exports = {
   // Theme Colors
 
   themeBlue: sonarrBlue,
-  themeAlternateBlue: '#2193b5',
+  themeAlternateBlue: '#9333ea',
   themeRed: '#c4273c',
   themeDarkColor: '#494949',
   themeLightColor: '#595959',
@@ -43,7 +43,7 @@ module.exports = {
   pageFooterBackground: 'rgba(0, 0, 0, .25)',
 
   torrentColor: '#00853d',
-  usenetColor: '#17b1d9',
+  usenetColor: '#9333ea',
 
   // Labels
   inverseLabelColor: '#ddd',
@@ -162,8 +162,8 @@ module.exports = {
   alertDangerBackgroundColor: 'rgba(255,0,0,0.1)',
   alertDangerColor: '#ccc',
 
-  alertInfoBorderColor: '#31708f',
-  alertInfoBackgroundColor: 'rgba(0,0,255,0.1)',
+  alertInfoBorderColor: '#7e22ce',
+  alertInfoBackgroundColor: 'rgba(168,85,247,0.1)',
   alertInfoColor: '#ccc',
 
   alertSuccessBorderColor: '#3c763d',

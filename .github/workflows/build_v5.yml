@@ -28,7 +28,7 @@ env:
 jobs:
   # Only run on the fork, every other job depends on prepare or checks the repository itself
   prepare:
-    if: github.repository == 'TOomaAh/Sonarr'
+    if: github.repository == 'Developpeur-du-dimanche/sonarr-extended'
     runs-on: ubuntu-latest
     outputs:
       framework: ${{ steps.variables.outputs.framework }}
@@ -97,7 +97,7 @@ jobs:
           package_tests: ${{ matrix.package_tests }}
 
   frontend:
-    if: github.repository == 'TOomaAh/Sonarr'
+    if: github.repository == 'Developpeur-du-dimanche/sonarr-extended'
     runs-on: ubuntu-latest
     steps:
       - name: Check out
@@ -214,7 +214,7 @@ jobs:
           binary_path: ${{ matrix.binary_path }}
 
   deploy:
-    if: ${{ github.repository == 'TOomaAh/Sonarr' && github.event_name == 'push' && (github.ref_name == 'v5-develop' || github.ref_name == 'v5-main') }}
+    if: ${{ github.repository == 'Developpeur-du-dimanche/sonarr-extended' && github.event_name == 'push' && (github.ref_name == 'v5-develop' || github.ref_name == 'v5-main') }}
     needs:
       [
         prepare,
