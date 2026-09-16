@@ -1,5 +1,5 @@
 #!/bin/bash
-### Description: Sonarr .NET Debian install
+### Description: Sonarr Extended .NET Debian install
 ### Originally written for Radarr by: DoctorArr - doctorarr@the-rowlands.co.uk on 2021-10-01 v1.0
 ### Updates for servarr suite made by Bakerboy448, DoctorArr, brightghost, aeramor and VP-EN
 ### Version v1.0.0 2023-12-29 - StevieTV - adapted from servarr script for Sonarr installs
@@ -8,6 +8,7 @@
 ### Version V1.0.3 2024-01-06 - StevieTV - exit script when it is ran from install directory
 ### Version V1.0.4 2025-04-05 - kaecyra - Allow user/group to be supplied via CLI, add unattended mode
 ### Version V1.0.5 2025-07-08 - bparkin1283 - use systemctl instead of service for stopping app
+### Version V1.1.0 2026-09-16 - Sonarr Extended - download releases from GitHub instead of Sonarr services
 
 ### Boilerplate Warning
 #THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
@@ -18,12 +19,12 @@
 #OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 #WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-scriptversion="1.0.4"
-scriptdate="2025-04-05"
+scriptversion="1.1.0"
+scriptdate="2026-09-16"
 
 set -euo pipefail
 
-echo "Running Sonarr Install Script - Version [$scriptversion] as of [$scriptdate]"
+echo "Running Sonarr Extended Install Script - Version [$scriptversion] as of [$scriptdate]"
 
 # Am I root?, need root!
 
@@ -36,7 +37,8 @@ app="sonarr"
 app_port="8989"
 app_prereq="curl sqlite3 wget"
 app_umask="0002"
-branch="main"
+branch="v5-develop"
+repo="Developpeur-du-dimanche/sonarr-extended"
 
 # Constants
 ### Update these variables as required for your specific instance
@@ -191,23 +193,30 @@ apt update && apt install -y $app_prereq
 echo ""
 ARCH=$(dpkg --print-architecture)
 # get arch
-dlbase="https://services.sonarr.tv/v1/download/$branch/latest?version=4&os=linux"
 case "$ARCH" in
-"amd64") DLURL="${dlbase}&arch=x64" ;;
-"armhf") DLURL="${dlbase}&arch=arm" ;;
-"arm64") DLURL="${dlbase}&arch=arm64" ;;
+"amd64") dlarch="x64" ;;
+"armhf") dlarch="arm" ;;
+"arm64") dlarch="arm64" ;;
 *)
     echo "Arch not supported"
     exit 1
     ;;
 esac
+# Latest GitHub release (releases are listed newest first) containing a package for this branch and arch
+DLURL=$(curl -fsSL "https://api.github.com/repos/$repo/releases" |
+    grep -oE "https://github.com/$repo/releases/download/[^\"]+/${app^}\.$branch\.[0-9.]+\.linux-$dlarch\.tar\.gz" |
+    head -n 1 || true)
+if [ -z "$DLURL" ]; then
+    echo "No release found for branch [$branch] and arch [$dlarch] in https://github.com/$repo/releases"
+    exit 1
+fi
 echo ""
 echo "Removing previous tarballs"
 # -f to Force so we fail if it doesn't exist
 rm -f "${app^}".*.tar.gz
 echo ""
 echo "Downloading..."
-wget --content-disposition "$DLURL"
+wget "$DLURL"
 tar -xvzf "${app^}".*.tar.gz
 echo ""
 echo "Installation files downloaded and extracted"
@@ -220,9 +229,6 @@ mv "${app^}" $installdir
 chown "$app_uid":"$app_guid" -R "$bindir"
 chmod 775 "$bindir"
 rm -rf "${app^}.*.tar.gz"
-# Ensure we check for an update in case user installs older version or different branch
-touch "$datadir"/update_required
-chown "$app_uid":"$app_guid" "$datadir"/update_required
 echo "App Installed"
 # Configure Autostart
 
