@@ -4,6 +4,7 @@ import Language from 'Language/Language';
 import Quality from 'Quality/Quality';
 
 export type SeriesType = 'anime' | 'daily' | 'standard';
+export type EpisodeOrder = 'tvdb' | 'tmdb';
 export type SeriesMonitor =
   | 'all'
   | 'future'
@@ -106,6 +107,8 @@ interface Series extends ModelBase {
   tvRageId: number;
   tmdbId: number;
   useSceneNumbering: boolean;
+  episodeOrder: EpisodeOrder;
+  tmdbEpisodeGroupId?: string | null;
   year: number;
   addOptions: SeriesAddOptions;
 }

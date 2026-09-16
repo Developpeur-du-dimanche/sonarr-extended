@@ -319,6 +319,12 @@ namespace NzbDrone.Core.Configuration
             set { SetValue("ListSyncTag", value); }
         }
 
+        public string TmdbApiKey
+        {
+            get { return GetValue("TmdbApiKey", string.Empty); }
+            set { SetValue("TmdbApiKey", value); }
+        }
+
         public int FirstDayOfWeek
         {
             get { return GetValueInt("FirstDayOfWeek", (int)CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek); }
