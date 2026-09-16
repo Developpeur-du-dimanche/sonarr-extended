@@ -232,3 +232,24 @@ jobs:
       branch: ${{ github.ref_name }}
       major_version: ${{ needs.prepare.outputs.major_version }}
       version: ${{ needs.prepare.outputs.version }}
+
+  docker:
+    if: ${{ github.repository == 'Developpeur-du-dimanche/sonarr-extended' && github.event_name == 'push' && github.ref_name == 'v5-develop' }}
+    needs:
+      [
+        prepare,
+        backend,
+        frontend,
+        unit_test,
+        unit_test_postgres,
+        integration_test,
+      ]
+    uses: ./.github/workflows/docker.yml
+    permissions:
+      contents: read
+      packages: write
+    with:
+      framework: ${{ needs.prepare.outputs.framework }}
+      branch: ${{ github.ref_name }}
+      version: ${{ needs.prepare.outputs.version }}
+      tag: develop
