@@ -16,6 +16,7 @@ jobs:
     # Ignore this check for PRs from owners, members, the weblate-servarr-sonarr
     # branch, and Bogdan (707714) to avoid false positives.
     if: >-
+      github.repository == 'Sonarr/Sonarr' &&
       !contains(fromJSON('["OWNER", "MEMBER"]'), github.event.pull_request.author_association) &&
       github.event.pull_request.head.ref != 'weblate-servarr-sonarr' &&
       github.event.pull_request.user.id != 707714

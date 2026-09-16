@@ -26,7 +26,9 @@ env:
   VERSION: 5.0.0
 
 jobs:
+  # Only run on the fork, every other job depends on prepare or checks the repository itself
   prepare:
+    if: github.repository == 'Developpeur-du-dimanche/sonarr-extended'
     runs-on: ubuntu-latest
     outputs:
       framework: ${{ steps.variables.outputs.framework }}
@@ -95,6 +97,7 @@ jobs:
           package_tests: ${{ matrix.package_tests }}
 
   frontend:
+    if: github.repository == 'Developpeur-du-dimanche/sonarr-extended'
     runs-on: ubuntu-latest
     steps:
       - name: Check out
@@ -211,7 +214,7 @@ jobs:
           binary_path: ${{ matrix.binary_path }}
 
   deploy:
-    if: ${{ github.ref_name == 'v5-develop-final' || github.ref_name == 'v5-main-final' }}
+    if: ${{ github.repository == 'Developpeur-du-dimanche/sonarr-extended' && github.event_name == 'push' && (github.ref_name == 'v5-develop' || github.ref_name == 'v5-main') }}
     needs:
       [
         prepare,
@@ -221,7 +224,6 @@ jobs:
         unit_test_postgres,
         integration_test,
       ]
-    secrets: inherit
     uses: ./.github/workflows/deploy.yml
     permissions:
       contents: write
@@ -230,34 +232,3 @@ jobs:
       branch: ${{ github.ref_name }}
       major_version: ${{ needs.prepare.outputs.major_version }}
       version: ${{ needs.prepare.outputs.version }}
-
-  notify:
-    name: Discord Notification
-    needs:
-      [
-        prepare,
-        backend,
-        frontend,
-        unit_test,
-        unit_test_postgres,
-        integration_test,
-        deploy,
-      ]
-    if: ${{ !cancelled() && (github.ref_name == 'v5-develop-final' || github.ref_name == 'v5-main-final') }}
-    env:
-      STATUS: ${{ contains(needs.*.result, 'failure') && 'failure' || 'success' }}
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Notify
-        uses: tsickert/discord-webhook@v7.0.0
-        with:
-          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          username: "GitHub Actions"
-          avatar-url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-          embed-title: "${{ github.workflow }}: ${{ env.STATUS == 'success' && 'Success' || 'Failure' }}"
-          embed-url: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          embed-description: |
-            **Branch** ${{ github.ref }}
-            **Build** ${{ needs.prepare.outputs.version }}
-          embed-color: ${{ env.STATUS == 'success' && '3066993' || '15158332' }}
