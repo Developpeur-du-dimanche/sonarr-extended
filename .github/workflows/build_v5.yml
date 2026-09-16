@@ -235,6 +235,7 @@ jobs:
 
   docker:
     if: ${{ github.repository == 'Developpeur-du-dimanche/sonarr-extended' && github.event_name == 'push' && github.ref_name == 'v5-develop' }}
+    # Integration tests rely on external services and must not block the image
     needs:
       [
         prepare,
@@ -242,7 +243,6 @@ jobs:
         frontend,
         unit_test,
         unit_test_postgres,
-        integration_test,
       ]
     uses: ./.github/workflows/docker.yml
     permissions:
