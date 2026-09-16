@@ -32,6 +32,9 @@ import RootFolderModal from './RootFolder/RootFolderModal';
 import { RootFolderUpdated } from './RootFolder/RootFolderModalContent';
 import styles from './EditSeriesModalContent.css';
 
+const EMPTY_ALIASES: string[] = [];
+const ALIAS_DELIMITERS = ['Tab', 'Enter'];
+
 export interface EditSeriesModalContentProps {
   seriesId: number;
   onModalClose: () => void;
@@ -54,6 +57,7 @@ function EditSeriesModalContent({
     seriesType,
     path,
     tags,
+    aliases = EMPTY_ALIASES,
     rootFolderPath: initialRootFolderPath,
   } = series;
 
@@ -81,6 +85,7 @@ function EditSeriesModalContent({
         seriesType,
         path,
         tags,
+        aliases,
       },
       pendingChanges,
       saveError
@@ -93,6 +98,7 @@ function EditSeriesModalContent({
     seriesType,
     path,
     tags,
+    aliases,
     pendingChanges,
     saveError,
   ]);
@@ -265,6 +271,19 @@ function EditSeriesModalContent({
               type={inputTypes.TAG}
               name="tags"
               {...settings.tags}
+              onChange={handleInputChange}
+            />
+          </FormGroup>
+
+          <FormGroup size={sizes.MEDIUM}>
+            <FormLabel>{translate('Aliases')}</FormLabel>
+
+            <FormInputGroup
+              type={inputTypes.TEXT_TAG}
+              name="aliases"
+              helpText={translate('AliasesHelpText')}
+              delimiters={ALIAS_DELIMITERS}
+              {...settings.aliases}
               onChange={handleInputChange}
             />
           </FormGroup>

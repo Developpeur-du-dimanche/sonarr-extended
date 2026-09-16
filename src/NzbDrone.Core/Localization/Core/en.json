@@ -72,6 +72,8 @@
   "AirsTbaOn": "TBA on {networkLabel}",
   "AirsTimeOn": "{time} on {networkLabel}",
   "AirsTomorrowOn": "Tomorrow at {time} on {networkLabel}",
+  "Aliases": "Aliases",
+  "AliasesHelpText": "Additional titles used to match releases and to search indexers for this series",
   "All": "All",
   "AllFiles": "All Files",
   "AllowSeasonPackWithoutAllEpisodesAired": "Allow Season Pack Before All Episodes Have Aired",

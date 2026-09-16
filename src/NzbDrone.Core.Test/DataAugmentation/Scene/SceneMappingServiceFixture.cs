@@ -8,6 +8,7 @@ using NUnit.Framework;
 using NzbDrone.Common.Extensions;
 using NzbDrone.Core.DataAugmentation.Scene;
 using NzbDrone.Core.Test.Framework;
+using NzbDrone.Core.Tv.Aliases;
 using NzbDrone.Test.Common;
 
 namespace NzbDrone.Core.Test.DataAugmentation.Scene
@@ -374,6 +375,35 @@ namespace NzbDrone.Core.Test.DataAugmentation.Scene
             Mocker.GetMock<ISceneMappingRepository>().Setup(c => c.All()).Returns(mappings);
 
             Subject.FindTvdbId("Amareto", "Amareto.S01E01.720p.WEB-DL-Viva", 4).Should().Be(101);
+        }
+
+        [Test]
+        public void should_find_tvdb_id_and_scene_names_for_series_alias()
+        {
+            Mocker.GetMock<ISceneMappingRepository>().Setup(c => c.All()).Returns(new List<SceneMapping>());
+
+            Mocker.GetMock<ISeriesAliasService>()
+                  .Setup(c => c.GetAllTitlesByTvdbId())
+                  .Returns(new List<KeyValuePair<int, string>> { new KeyValuePair<int, string>(100, "My Custom Alias") });
+
+            Subject.FindTvdbId("My Custom Alias", null, -1).Should().Be(100);
+            Subject.GetSceneNames(100, new List<int> { 1 }, new List<int>()).Should().Contain("My Custom Alias");
+        }
+
+        [Test]
+        public void should_refresh_cache_when_series_aliases_are_updated()
+        {
+            Mocker.GetMock<ISceneMappingRepository>().Setup(c => c.All()).Returns(new List<SceneMapping>());
+
+            Subject.FindTvdbId("My Custom Alias", null, -1).Should().BeNull();
+
+            Mocker.GetMock<ISeriesAliasService>()
+                  .Setup(c => c.GetAllTitlesByTvdbId())
+                  .Returns(new List<KeyValuePair<int, string>> { new KeyValuePair<int, string>(100, "My Custom Alias") });
+
+            Subject.Handle(new SeriesAliasesUpdatedEvent(new List<int> { 1 }));
+
+            Subject.FindTvdbId("My Custom Alias", null, -1).Should().Be(100);
         }
 
         private void AssertNoUpdate()
