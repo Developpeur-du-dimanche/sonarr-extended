@@ -3,7 +3,7 @@ using NzbDrone.Core.Datastore.Migration.Framework;
 
 namespace NzbDrone.Core.Datastore.Migration
 {
-    [Migration(234)]
+    [Migration(235)]
     public class add_series_aliases : NzbDroneMigrationBase
     {
         protected override void MainDbUpgrade()

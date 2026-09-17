@@ -29,8 +29,6 @@ namespace NzbDrone.Core.DataAugmentation.Scene
                                        IHandle<SeriesAliasesUpdatedEvent>,
                                        IExecute<UpdateSceneMappingCommand>
     {
-        private const string SeriesAliasType = "SeriesAlias";
-
         private readonly ISceneMappingRepository _repository;
         private readonly ISeriesAliasService _seriesAliasService;
         private readonly IEnumerable<ISceneMappingProvider> _sceneMappingProviders;
@@ -282,7 +280,7 @@ namespace NzbDrone.Core.DataAugmentation.Scene
                 TvdbId = alias.Key,
                 SeasonNumber = -1,
                 SceneSeasonNumber = -1,
-                Type = SeriesAliasType
+                Type = SceneMapping.SeriesAliasType
             });
         }
 

@@ -12,6 +12,7 @@ using NzbDrone.Core.MediaFiles;
 using NzbDrone.Core.MediaFiles.Events;
 using NzbDrone.Core.Messaging.Commands;
 using NzbDrone.Core.Messaging.Events;
+using NzbDrone.Core.Parser;
 using NzbDrone.Core.RootFolders;
 using NzbDrone.Core.SeriesStats;
 using NzbDrone.Core.Tv;
@@ -114,9 +115,16 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
                 return;
             }
 
-            foreach (var alias in aliases.Where(a => IsAliasUsedByOtherSeries((SeriesResource)context.InstanceToValidate, a)))
+            var resource = (SeriesResource)context.InstanceToValidate;
+
+            foreach (var alias in aliases.Where(a => IsAliasUsedByOtherSeries(resource, a)))
             {
                 context.AddFailure("Aliases", $"'{alias}' is already used by another series");
+            }
+
+            foreach (var alias in aliases.Where(a => IsAliasAlreadyKnownForSeries(resource, a)))
+            {
+                context.AddFailure("Aliases", $"'{alias}' is already a known title for this series");
             }
         });
 
@@ -354,7 +362,10 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
             return;
         }
 
-        resource.AlternateTitles = mappings.ConvertAll(AlternateTitleResourceMapper.ToResource);
+        // User defined aliases are injected into the scene mapping cache, they are exposed as Aliases instead.
+        resource.AlternateTitles = mappings.Where(m => m.Type != SceneMapping.SeriesAliasType)
+                                           .Select(AlternateTitleResourceMapper.ToResource)
+                                           .ToList();
     }
 
     private void PopulateAliases(List<SeriesResource> resources)
@@ -400,6 +411,26 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
         {
             return true;
         }
+    }
+
+    private bool IsAliasAlreadyKnownForSeries(SeriesResource resource, string? alias)
+    {
+        if (alias.IsNullOrWhiteSpace())
+        {
+            return false;
+        }
+
+        var cleanAlias = alias.CleanSeriesTitle();
+
+        if (cleanAlias == resource.Title?.CleanSeriesTitle())
+        {
+            return true;
+        }
+
+        var mappings = _sceneMappingService.FindByTvdbId(resource.TvdbId);
+
+        return mappings != null &&
+               mappings.Any(m => m.Type != SceneMapping.SeriesAliasType && m.ParseTerm == cleanAlias);
     }
 
     private void LinkRootFolderPath(SeriesResource resource)
