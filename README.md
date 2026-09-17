@@ -21,6 +21,7 @@ Sonarr Extended is an unofficial fork of [Sonarr](https://github.com/Sonarr/Sona
 
 - **TMDB metadata source**: use [TMDB](https://www.themoviedb.org/) episode data as an alternative to TVDB for a series
 - **Episode orders**: pick a TMDB episode group per series to use an alternative episode ordering (absolute, DVD, story arcs, …)
+- **Manual series aliases**: add your own alternate titles to a series, on top of the ones Sonarr gets from its scene mapping providers, to match releases and search indexers
 
 Everything else comes from Sonarr: see [Sonarr's features](https://github.com/Sonarr/Sonarr#features).
 
