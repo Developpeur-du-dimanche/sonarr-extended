@@ -1,0 +1,23 @@
+.title {
+  composes: cell from '~Components/Table/Cells/TableRowCell.css';
+
+  color: var(--disabledColor);
+}
+
+.comment {
+  color: var(--disabledColor);
+  font-size: $smallFontSize;
+}
+
+.source {
+  composes: cell from '~Components/Table/Cells/TableRowCell.css';
+
+  width: 110px;
+  color: var(--disabledColor);
+}
+
+.actions {
+  composes: cell from '~Components/Table/Cells/TableRowCell.css';
+
+  width: 45px;
+}

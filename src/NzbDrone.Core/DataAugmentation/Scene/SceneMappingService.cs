@@ -8,6 +8,7 @@ using NzbDrone.Common.Extensions;
 using NzbDrone.Core.Messaging.Commands;
 using NzbDrone.Core.Messaging.Events;
 using NzbDrone.Core.Parser;
+using NzbDrone.Core.Tv.Aliases;
 using NzbDrone.Core.Tv.Events;
 
 namespace NzbDrone.Core.DataAugmentation.Scene
@@ -25,9 +26,11 @@ namespace NzbDrone.Core.DataAugmentation.Scene
                                        IHandle<SeriesRefreshStartingEvent>,
                                        IHandle<SeriesAddedEvent>,
                                        IHandle<SeriesImportedEvent>,
+                                       IHandle<SeriesAliasesUpdatedEvent>,
                                        IExecute<UpdateSceneMappingCommand>
     {
         private readonly ISceneMappingRepository _repository;
+        private readonly ISeriesAliasService _seriesAliasService;
         private readonly IEnumerable<ISceneMappingProvider> _sceneMappingProviders;
         private readonly IEventAggregator _eventAggregator;
         private readonly Logger _logger;
@@ -36,12 +39,14 @@ namespace NzbDrone.Core.DataAugmentation.Scene
         private bool _updatedAfterStartup;
 
         public SceneMappingService(ISceneMappingRepository repository,
+                                   ISeriesAliasService seriesAliasService,
                                    ICacheManager cacheManager,
                                    IEnumerable<ISceneMappingProvider> sceneMappingProviders,
                                    IEventAggregator eventAggregator,
                                    Logger logger)
         {
             _repository = repository;
+            _seriesAliasService = seriesAliasService;
             _sceneMappingProviders = sceneMappingProviders;
             _eventAggregator = eventAggregator;
             _logger = logger;
@@ -257,8 +262,26 @@ namespace NzbDrone.Core.DataAugmentation.Scene
         {
             var mappings = _repository.All().ToList();
 
+            mappings.AddRange(GetSeriesAliasMappings());
+
             _getTvdbIdCache.Update(mappings.GroupBy(v => v.ParseTerm).ToDictionary(v => v.Key, v => v.ToList()));
             _findByTvdbIdCache.Update(mappings.GroupBy(v => v.TvdbId).ToDictionary(v => v.Key.ToString(), v => v.ToList()));
+        }
+
+        private IEnumerable<SceneMapping> GetSeriesAliasMappings()
+        {
+            var aliases = _seriesAliasService.GetAllTitlesByTvdbId() ?? new List<KeyValuePair<int, string>>();
+
+            return aliases.Select(alias => new SceneMapping
+            {
+                Title = alias.Value,
+                ParseTerm = alias.Value.CleanSeriesTitle(),
+                SearchTerm = alias.Value,
+                TvdbId = alias.Key,
+                SeasonNumber = -1,
+                SceneSeasonNumber = -1,
+                Type = SceneMapping.SeriesAliasType
+            });
         }
 
         private List<SceneMapping> FilterSceneMappings(List<SceneMapping> candidates, string releaseTitle)
@@ -330,6 +353,11 @@ namespace NzbDrone.Core.DataAugmentation.Scene
             {
                 UpdateMappings();
             }
+        }
+
+        public void Handle(SeriesAliasesUpdatedEvent message)
+        {
+            RefreshCache();
         }
 
         public void Execute(UpdateSceneMappingCommand message)

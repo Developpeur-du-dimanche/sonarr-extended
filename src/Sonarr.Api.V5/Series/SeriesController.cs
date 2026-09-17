@@ -12,9 +12,11 @@ using NzbDrone.Core.MediaFiles;
 using NzbDrone.Core.MediaFiles.Events;
 using NzbDrone.Core.Messaging.Commands;
 using NzbDrone.Core.Messaging.Events;
+using NzbDrone.Core.Parser;
 using NzbDrone.Core.RootFolders;
 using NzbDrone.Core.SeriesStats;
 using NzbDrone.Core.Tv;
+using NzbDrone.Core.Tv.Aliases;
 using NzbDrone.Core.Tv.Commands;
 using NzbDrone.Core.Tv.Events;
 using NzbDrone.Core.Validation;
@@ -41,6 +43,7 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
     private readonly IAddSeriesService _addSeriesService;
     private readonly ISeriesStatisticsService _seriesStatisticsService;
     private readonly ISceneMappingService _sceneMappingService;
+    private readonly ISeriesAliasService _seriesAliasService;
     private readonly IMapCoversToLocal _coverMapper;
     private readonly IManageCommandQueue _commandQueueManager;
     private readonly IRootFolderService _rootFolderService;
@@ -52,6 +55,7 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
                         IAddSeriesService addSeriesService,
                         ISeriesStatisticsService seriesStatisticsService,
                         ISceneMappingService sceneMappingService,
+                        ISeriesAliasService seriesAliasService,
                         IMapCoversToLocal coverMapper,
                         IManageCommandQueue commandQueueManager,
                         IRootFolderService rootFolderService,
@@ -70,6 +74,7 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
         _addSeriesService = addSeriesService;
         _seriesStatisticsService = seriesStatisticsService;
         _sceneMappingService = sceneMappingService;
+        _seriesAliasService = seriesAliasService;
 
         _coverMapper = coverMapper;
         _commandQueueManager = commandQueueManager;
@@ -103,6 +108,26 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
             .ValidId()
             .SetValidator(qualityProfileExistsValidator);
 
+        PutValidator.RuleFor(s => s.Aliases).Custom((aliases, context) =>
+        {
+            if (aliases == null)
+            {
+                return;
+            }
+
+            var resource = (SeriesResource)context.InstanceToValidate;
+
+            foreach (var alias in aliases.Where(a => IsAliasUsedByOtherSeries(resource, a)))
+            {
+                context.AddFailure("Aliases", $"'{alias}' is already used by another series");
+            }
+
+            foreach (var alias in aliases.Where(a => IsAliasAlreadyKnownForSeries(resource, a)))
+            {
+                context.AddFailure("Aliases", $"'{alias}' is already a known title for this series");
+            }
+        });
+
         PostValidator.RuleFor(s => s.Title).NotEmpty();
         PostValidator.RuleFor(s => s.TvdbId).GreaterThan(0).SetValidator(seriesExistsValidator);
     }
@@ -127,6 +152,7 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
         MapCoversToLocal(seriesResources.ToArray());
         LinkSeriesStatistics(seriesResources, seriesStats.ToDictionary(x => x.SeriesId));
         PopulateAlternateTitles(seriesResources);
+        PopulateAliases(seriesResources);
         seriesResources.ForEach(LinkRootFolderPath);
 
         return TypedResults.Ok(seriesResources);
@@ -211,10 +237,17 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
                 trigger: CommandTrigger.Manual);
         }
 
+        if (seriesResource.Aliases != null)
+        {
+            _seriesAliasService.SetAliases(series.Id, seriesResource.Aliases);
+        }
+
         var model = seriesResource.ToModel(series);
 
         _seriesService.UpdateSeries(model);
 
+        PopulateAlternateTitles(seriesResource);
+        PopulateAliases(seriesResource);
         BroadcastResourceChange(ModelAction.Updated, seriesResource);
 
         return TypedAccepted(seriesResource.Id);
@@ -264,6 +297,7 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
         MapCoversToLocal(resource);
         FetchAndLinkSeriesStatistics(resource);
         PopulateAlternateTitles(resource);
+        PopulateAliases(resource);
         LinkRootFolderPath(resource);
 
         return resource;
@@ -328,7 +362,75 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
             return;
         }
 
-        resource.AlternateTitles = mappings.ConvertAll(AlternateTitleResourceMapper.ToResource);
+        // User defined aliases are injected into the scene mapping cache, they are exposed as Aliases instead.
+        resource.AlternateTitles = mappings.Where(m => m.Type != SceneMapping.SeriesAliasType)
+                                           .Select(AlternateTitleResourceMapper.ToResource)
+                                           .ToList();
+    }
+
+    private void PopulateAliases(List<SeriesResource> resources)
+    {
+        var aliases = _seriesAliasService.GetAllTitlesBySeriesId();
+
+        foreach (var resource in resources)
+        {
+            resource.Aliases = aliases.TryGetValue(resource.Id, out var titles) ? titles : new List<string>();
+        }
+    }
+
+    private void PopulateAliases(SeriesResource resource)
+    {
+        resource.Aliases = _seriesAliasService.GetBySeriesId(resource.Id).Select(a => a.Title).ToList();
+    }
+
+    private bool IsAliasUsedByOtherSeries(SeriesResource resource, string? alias)
+    {
+        if (alias.IsNullOrWhiteSpace())
+        {
+            return false;
+        }
+
+        try
+        {
+            var existingSeries = _seriesService.FindByTitle(alias);
+
+            if (existingSeries != null && existingSeries.Id != resource.Id)
+            {
+                return true;
+            }
+
+            var tvdbId = _sceneMappingService.FindTvdbId(alias, null, -1);
+
+            return tvdbId.HasValue && tvdbId.Value != resource.TvdbId;
+        }
+        catch (MultipleSeriesFoundException)
+        {
+            return true;
+        }
+        catch (InvalidSceneMappingException)
+        {
+            return true;
+        }
+    }
+
+    private bool IsAliasAlreadyKnownForSeries(SeriesResource resource, string? alias)
+    {
+        if (alias.IsNullOrWhiteSpace())
+        {
+            return false;
+        }
+
+        var cleanAlias = alias.CleanSeriesTitle();
+
+        if (cleanAlias == resource.Title?.CleanSeriesTitle())
+        {
+            return true;
+        }
+
+        var mappings = _sceneMappingService.FindByTvdbId(resource.TvdbId);
+
+        return mappings != null &&
+               mappings.Any(m => m.Type != SceneMapping.SeriesAliasType && m.ParseTerm == cleanAlias);
     }
 
     private void LinkRootFolderPath(SeriesResource resource)

@@ -71,6 +71,7 @@ export interface SeriesAddOptions {
 
 interface Series extends ModelBase {
   added: string;
+  aliases?: string[];
   alternateTitles: AlternateTitle[];
   certification: string;
   cleanTitle: string;
