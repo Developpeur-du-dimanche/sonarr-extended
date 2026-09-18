@@ -24,13 +24,15 @@ namespace NzbDrone.Core.Test.TvTests.SeriesAliasTests
         }
 
         [Test]
-        public void should_return_titles_with_series_tvdb_id()
+        public void should_return_aliases_with_series_tvdb_id()
         {
             Subject.Insert(new SeriesAlias { SeriesId = _series.Id, Title = "My Alias" });
+            Subject.Insert(new SeriesAlias { SeriesId = _series.Id, Title = "Season Alias", SeasonNumber = 4, SceneSeasonNumber = 1 });
 
-            Subject.AllTitlesByTvdbId().Should().BeEquivalentTo(new List<KeyValuePair<int, string>>
+            Subject.AllWithTvdbId().Should().BeEquivalentTo(new List<SeriesAliasWithTvdbId>
             {
-                new KeyValuePair<int, string>(12345, "My Alias")
+                new SeriesAliasWithTvdbId { TvdbId = 12345, Title = "My Alias" },
+                new SeriesAliasWithTvdbId { TvdbId = 12345, Title = "Season Alias", SeasonNumber = 4, SceneSeasonNumber = 1 }
             });
         }
 

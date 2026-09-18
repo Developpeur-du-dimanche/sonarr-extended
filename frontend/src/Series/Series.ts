@@ -63,6 +63,12 @@ export interface AlternateTitle {
   comment?: string;
 }
 
+export interface SeriesAlias {
+  title: string;
+  seasonNumber?: number | null;
+  sceneSeasonNumber?: number | null;
+}
+
 export interface SeriesAddOptions {
   monitor: SeriesMonitor;
   searchForMissingEpisodes: boolean;
@@ -71,7 +77,7 @@ export interface SeriesAddOptions {
 
 interface Series extends ModelBase {
   added: string;
-  aliases?: string[];
+  aliases?: SeriesAlias[];
   alternateTitles: AlternateTitle[];
   certification: string;
   cleanTitle: string;

@@ -3,6 +3,8 @@
 interface CssExports {
   'actions': string;
   'comment': string;
+  'releaseSeason': string;
+  'season': string;
   'source': string;
   'title': string;
 }

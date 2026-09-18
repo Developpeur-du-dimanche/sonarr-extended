@@ -1,11 +1,26 @@
 import React from 'react';
-import { AlternateTitle } from 'Series/Series';
+import formatSeason from 'Season/formatSeason';
+import { AlternateTitle, SeriesAlias } from 'Series/Series';
 import translate from 'Utilities/String/translate';
 import styles from './SeriesAlternateTitles.css';
 
+function getAliasSeasonInfo({ seasonNumber, sceneSeasonNumber }: SeriesAlias) {
+  if (seasonNumber === null || seasonNumber === undefined) {
+    return null;
+  }
+
+  const season = formatSeason(seasonNumber) ?? '';
+
+  if (sceneSeasonNumber === null || sceneSeasonNumber === undefined) {
+    return season;
+  }
+
+  return translate('AliasesSeasonReleasedAs', { season, sceneSeasonNumber });
+}
+
 interface SeriesAlternateTitlesProps {
   alternateTitles: AlternateTitle[];
-  aliases?: string[];
+  aliases?: SeriesAlias[];
 }
 
 function SeriesAlternateTitles({
@@ -20,9 +35,20 @@ function SeriesAlternateTitles({
 
           <ul className={styles.titles}>
             {aliases.map((alias) => {
+              const seasonInfo = getAliasSeasonInfo(alias);
+
               return (
-                <li key={alias} className={styles.alternateTitle}>
-                  {alias}
+                <li
+                  key={`${alias.title}-${alias.seasonNumber ?? ''}-${
+                    alias.sceneSeasonNumber ?? ''
+                  }`}
+                  className={styles.alternateTitle}
+                >
+                  {alias.title}
+
+                  {seasonInfo ? (
+                    <span className={styles.comment}> {seasonInfo}</span>
+                  ) : null}
                 </li>
               );
             })}

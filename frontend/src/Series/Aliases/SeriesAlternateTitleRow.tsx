@@ -21,6 +21,12 @@ function SeriesAlternateTitleRow({
         {comment ? <span className={styles.comment}> {comment}</span> : null}
       </TableRowCell>
 
+      <TableRowCell className={styles.season}>
+        {translate('AllSeasons')}
+      </TableRowCell>
+
+      <TableRowCell className={styles.releaseSeason} />
+
       <TableRowCell className={styles.source}>
         {translate('Automatic')}
       </TableRowCell>
