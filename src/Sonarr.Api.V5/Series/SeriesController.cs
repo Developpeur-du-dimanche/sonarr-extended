@@ -116,15 +116,21 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
             }
 
             var resource = (SeriesResource)context.InstanceToValidate;
+            var seasonNumbers = resource.Seasons.Select(s => s.SeasonNumber).ToList();
 
-            foreach (var alias in aliases.Where(a => IsAliasUsedByOtherSeries(resource, a)))
+            foreach (var alias in aliases.Where(a => a.SeasonNumber >= 0 && !seasonNumbers.Contains(a.SeasonNumber.Value)))
             {
-                context.AddFailure("Aliases", $"'{alias}' is already used by another series");
+                context.AddFailure("Aliases", $"'{alias.Title}' uses season {alias.SeasonNumber}, which does not exist for this series");
+            }
+
+            foreach (var alias in aliases.Where(a => IsAliasUsedByOtherSeries(resource, a.Title)))
+            {
+                context.AddFailure("Aliases", $"'{alias.Title}' is already used by another series");
             }
 
             foreach (var alias in aliases.Where(a => IsAliasAlreadyKnownForSeries(resource, a)))
             {
-                context.AddFailure("Aliases", $"'{alias}' is already a known title for this series");
+                context.AddFailure("Aliases", $"'{alias.Title}' is already a known title for this series");
             }
         });
 
@@ -239,7 +245,7 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
 
         if (seriesResource.Aliases != null)
         {
-            _seriesAliasService.SetAliases(series.Id, seriesResource.Aliases);
+            _seriesAliasService.SetAliases(series.Id, seriesResource.Aliases.Select(a => a.ToModel()));
         }
 
         var model = seriesResource.ToModel(series);
@@ -370,17 +376,19 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
 
     private void PopulateAliases(List<SeriesResource> resources)
     {
-        var aliases = _seriesAliasService.GetAllTitlesBySeriesId();
+        var aliases = _seriesAliasService.GetAllBySeriesId();
 
         foreach (var resource in resources)
         {
-            resource.Aliases = aliases.TryGetValue(resource.Id, out var titles) ? titles : new List<string>();
+            resource.Aliases = aliases.TryGetValue(resource.Id, out var seriesAliases)
+                ? seriesAliases.Select(a => a.ToResource()).ToList()
+                : new List<SeriesAliasResource>();
         }
     }
 
     private void PopulateAliases(SeriesResource resource)
     {
-        resource.Aliases = _seriesAliasService.GetBySeriesId(resource.Id).Select(a => a.Title).ToList();
+        resource.Aliases = _seriesAliasService.GetBySeriesId(resource.Id).Select(a => a.ToResource()).ToList();
     }
 
     private bool IsAliasUsedByOtherSeries(SeriesResource resource, string? alias)
@@ -413,24 +421,36 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
         }
     }
 
-    private bool IsAliasAlreadyKnownForSeries(SeriesResource resource, string? alias)
+    private bool IsAliasAlreadyKnownForSeries(SeriesResource resource, SeriesAliasResource alias)
     {
-        if (alias.IsNullOrWhiteSpace())
+        if (alias.Title.IsNullOrWhiteSpace())
         {
             return false;
         }
 
-        var cleanAlias = alias.CleanSeriesTitle();
+        var cleanAlias = alias.Title.CleanSeriesTitle();
 
         if (cleanAlias == resource.Title?.CleanSeriesTitle())
         {
             return true;
         }
 
+        var remapsReleaseSeason = RemapsReleaseSeason(alias);
         var mappings = _sceneMappingService.FindByTvdbId(resource.TvdbId);
 
         return mappings != null &&
-               mappings.Any(m => m.Type != SceneMapping.SeriesAliasType && m.ParseTerm == cleanAlias);
+               mappings.Any(m => m.Type != SceneMapping.SeriesAliasType &&
+                                 m.ParseTerm == cleanAlias &&
+                                 (!remapsReleaseSeason ||
+                                  (m.SeasonNumber.NonNegative() == alias.SeasonNumber && m.SceneSeasonNumber.NonNegative() == alias.SceneSeasonNumber)));
+    }
+
+    private static bool RemapsReleaseSeason(SeriesAliasResource alias)
+    {
+        var seasonNumber = alias.SeasonNumber.NonNegative();
+        var sceneSeasonNumber = alias.SceneSeasonNumber.NonNegative();
+
+        return seasonNumber.HasValue && sceneSeasonNumber.HasValue && sceneSeasonNumber != seasonNumber;
     }
 
     private void LinkRootFolderPath(SeriesResource resource)

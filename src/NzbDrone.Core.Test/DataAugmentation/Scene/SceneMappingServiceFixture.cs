@@ -382,12 +382,41 @@ namespace NzbDrone.Core.Test.DataAugmentation.Scene
         {
             Mocker.GetMock<ISceneMappingRepository>().Setup(c => c.All()).Returns(new List<SceneMapping>());
 
-            Mocker.GetMock<ISeriesAliasService>()
-                  .Setup(c => c.GetAllTitlesByTvdbId())
-                  .Returns(new List<KeyValuePair<int, string>> { new KeyValuePair<int, string>(100, "My Custom Alias") });
+            GivenSeriesAliases(new SeriesAliasWithTvdbId { TvdbId = 100, Title = "My Custom Alias" });
 
             Subject.FindTvdbId("My Custom Alias", null, -1).Should().Be(100);
             Subject.GetSceneNames(100, new List<int> { 1 }, new List<int>()).Should().Contain("My Custom Alias");
+        }
+
+        [Test]
+        public void should_only_search_series_alias_restricted_to_a_season_for_that_season()
+        {
+            Mocker.GetMock<ISceneMappingRepository>().Setup(c => c.All()).Returns(new List<SceneMapping>());
+
+            GivenSeriesAliases(new SeriesAliasWithTvdbId { TvdbId = 100, Title = "Season Alias", SeasonNumber = 4 });
+
+            var mapping = Subject.FindByTvdbId(100).Single();
+
+            mapping.SeasonNumber.Should().Be(4);
+            mapping.SceneSeasonNumber.Should().BeNull();
+
+            Subject.GetSceneNames(100, new List<int> { 4 }, new List<int> { 4 }).Should().Contain("Season Alias");
+            Subject.GetSceneNames(100, new List<int> { 1 }, new List<int> { 1 }).Should().NotContain("Season Alias");
+        }
+
+        [Test]
+        public void should_find_series_alias_with_release_season_for_that_release_season()
+        {
+            Mocker.GetMock<ISceneMappingRepository>().Setup(c => c.All()).Returns(new List<SceneMapping>());
+
+            GivenSeriesAliases(new SeriesAliasWithTvdbId { TvdbId = 100, Title = "Monster The Lizzie Borden Story", SeasonNumber = 4, SceneSeasonNumber = 1 });
+
+            var mapping = Subject.FindSceneMapping("Monster The Lizzie Borden Story", "Monster.The.Lizzie.Borden.Story.S01E03.1080p.WEB.h264-GROUP", 1);
+
+            mapping.Should().NotBeNull();
+            mapping.TvdbId.Should().Be(100);
+            mapping.SeasonNumber.Should().Be(4);
+            mapping.SceneSeasonNumber.Should().Be(1);
         }
 
         [Test]
@@ -397,13 +426,18 @@ namespace NzbDrone.Core.Test.DataAugmentation.Scene
 
             Subject.FindTvdbId("My Custom Alias", null, -1).Should().BeNull();
 
-            Mocker.GetMock<ISeriesAliasService>()
-                  .Setup(c => c.GetAllTitlesByTvdbId())
-                  .Returns(new List<KeyValuePair<int, string>> { new KeyValuePair<int, string>(100, "My Custom Alias") });
+            GivenSeriesAliases(new SeriesAliasWithTvdbId { TvdbId = 100, Title = "My Custom Alias" });
 
             Subject.Handle(new SeriesAliasesUpdatedEvent(new List<int> { 1 }));
 
             Subject.FindTvdbId("My Custom Alias", null, -1).Should().Be(100);
+        }
+
+        private void GivenSeriesAliases(params SeriesAliasWithTvdbId[] aliases)
+        {
+            Mocker.GetMock<ISeriesAliasService>()
+                  .Setup(c => c.GetAllWithTvdbId())
+                  .Returns(aliases.ToList());
         }
 
         private void AssertNoUpdate()

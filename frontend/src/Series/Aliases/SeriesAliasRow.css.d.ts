@@ -2,6 +2,8 @@
 // Please do not change this file!
 interface CssExports {
   'actions': string;
+  'releaseSeason': string;
+  'season': string;
   'source': string;
 }
 export const cssExports: CssExports;

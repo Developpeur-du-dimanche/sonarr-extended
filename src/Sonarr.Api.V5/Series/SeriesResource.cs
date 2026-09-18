@@ -12,7 +12,7 @@ public class SeriesResource : RestResource
 {
     public string? Title { get; set; }
     public List<AlternateTitleResource>? AlternateTitles { get; set; }
-    public List<string>? Aliases { get; set; }
+    public List<SeriesAliasResource>? Aliases { get; set; }
     public string? SortTitle { get; set; }
     public SeriesStatusType Status { get; set; }
     public bool Ended => Status == SeriesStatusType.Ended;

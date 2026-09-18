@@ -9,7 +9,7 @@ namespace NzbDrone.Core.Tv.Aliases
     public interface ISeriesAliasRepository : IBasicRepository<SeriesAlias>
     {
         List<SeriesAlias> GetBySeriesId(int seriesId);
-        List<KeyValuePair<int, string>> AllTitlesByTvdbId();
+        List<SeriesAliasWithTvdbId> AllWithTvdbId();
         void DeleteForSeries(List<int> seriesIds);
     }
 
@@ -25,12 +25,12 @@ namespace NzbDrone.Core.Tv.Aliases
             return Query(x => x.SeriesId == seriesId);
         }
 
-        public List<KeyValuePair<int, string>> AllTitlesByTvdbId()
+        public List<SeriesAliasWithTvdbId> AllWithTvdbId()
         {
             using (var conn = _database.OpenConnection())
             {
-                var strSql = "SELECT \"Series\".\"TvdbId\" AS Key, \"SeriesAliases\".\"Title\" AS Value FROM \"SeriesAliases\" INNER JOIN \"Series\" ON \"Series\".\"Id\" = \"SeriesAliases\".\"SeriesId\"";
-                return conn.Query<KeyValuePair<int, string>>(strSql).ToList();
+                var strSql = "SELECT \"Series\".\"TvdbId\", \"SeriesAliases\".\"Title\", \"SeriesAliases\".\"SeasonNumber\", \"SeriesAliases\".\"SceneSeasonNumber\" FROM \"SeriesAliases\" INNER JOIN \"Series\" ON \"Series\".\"Id\" = \"SeriesAliases\".\"SeriesId\"";
+                return conn.Query<SeriesAliasWithTvdbId>(strSql).ToList();
             }
         }
 

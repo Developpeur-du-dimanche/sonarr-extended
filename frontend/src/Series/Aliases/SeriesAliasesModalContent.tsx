@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import Alert from 'Components/Alert';
 import Form from 'Components/Form/Form';
+import { SelectInputOption } from 'Components/Form/SelectInput';
 import Button from 'Components/Link/Button';
 import SpinnerErrorButton from 'Components/Link/SpinnerErrorButton';
 import InlineMarkdown from 'Components/Markdown/InlineMarkdown';
@@ -19,11 +20,13 @@ import Table from 'Components/Table/Table';
 import TableBody from 'Components/Table/TableBody';
 import usePrevious from 'Helpers/Hooks/usePrevious';
 import { kinds } from 'Helpers/Props';
+import formatSeason from 'Season/formatSeason';
+import { SeriesAlias } from 'Series/Series';
 import { useSaveSeries, useSingleSeries } from 'Series/useSeries';
 import { getValidationFailures } from 'Utilities/selectSettings';
 import filterAlternateTitles from 'Utilities/Series/filterAlternateTitles';
 import translate from 'Utilities/String/translate';
-import SeriesAliasRow from './SeriesAliasRow';
+import SeriesAliasRow, { ALL_SEASONS } from './SeriesAliasRow';
 import SeriesAlternateTitleRow from './SeriesAlternateTitleRow';
 import styles from './SeriesAliasesModalContent.css';
 
@@ -34,6 +37,16 @@ const COLUMNS: Column[] = [
   {
     name: 'title',
     label: () => translate('Alias'),
+    isVisible: true,
+  },
+  {
+    name: 'seasonNumber',
+    label: () => translate('Season'),
+    isVisible: true,
+  },
+  {
+    name: 'releaseSeasonNumber',
+    label: () => translate('AliasesReleaseSeason'),
     isVisible: true,
   },
   {
@@ -51,6 +64,28 @@ const COLUMNS: Column[] = [
 interface AliasItem {
   id: number;
   title: string;
+  seasonNumber: number | null;
+  releaseSeasonNumber: number | null;
+}
+
+// Like the server, the release season is only kept when it differs from the season.
+function getSceneSeasonNumber({
+  seasonNumber,
+  releaseSeasonNumber,
+}: AliasItem) {
+  return seasonNumber !== null &&
+    releaseSeasonNumber !== null &&
+    releaseSeasonNumber !== seasonNumber
+    ? releaseSeasonNumber
+    : null;
+}
+
+function getAliasKey(item: AliasItem) {
+  return [
+    item.title.trim().toLowerCase(),
+    item.seasonNumber ?? '',
+    getSceneSeasonNumber(item) ?? '',
+  ].join('|');
 }
 
 export interface SeriesAliasesModalContentProps {
@@ -68,7 +103,24 @@ function SeriesAliasesModalContent({
   const nextId = useRef(0);
 
   const [items, setItems] = useState<AliasItem[]>(() =>
-    (aliases ?? []).map((alias) => ({ id: nextId.current++, title: alias }))
+    (aliases ?? []).map((alias) => ({
+      id: nextId.current++,
+      title: alias.title,
+      seasonNumber: alias.seasonNumber ?? null,
+      releaseSeasonNumber:
+        alias.sceneSeasonNumber ?? alias.seasonNumber ?? null,
+    }))
+  );
+
+  const seasonOptions = useMemo<SelectInputOption[]>(
+    () => [
+      { key: ALL_SEASONS, value: translate('AllSeasons') },
+      ...series.seasons.map(({ seasonNumber }) => ({
+        key: seasonNumber,
+        value: formatSeason(seasonNumber) ?? '',
+      })),
+    ],
+    [series.seasons]
   );
 
   const providerTitles = useMemo(
@@ -89,53 +141,78 @@ function SeriesAliasesModalContent({
     [saveError]
   );
 
-  // Titles already recognized for this series, so a manual alias cannot repeat one.
-  // This is a plain case-insensitive match; the server also rejects them using the
-  // same normalization it applies when parsing releases.
-  const knownKeys = useMemo(() => {
-    const keys = new Set<string>();
-
-    keys.add(title.trim().toLowerCase());
-    providerTitles.forEach((t) => keys.add(t.title.trim().toLowerCase()));
-
-    return keys;
-  }, [title, providerTitles]);
+  // Titles already recognized for this series, so a manual alias cannot repeat one unless it
+  // remaps the release season. This is a plain case-insensitive match; the server also rejects
+  // them using the same normalization it applies when parsing releases.
+  const providerTitleKeys = useMemo(
+    () => new Set(providerTitles.map((t) => t.title.trim().toLowerCase())),
+    [providerTitles]
+  );
 
   const duplicateIds = useMemo(() => {
+    const seriesTitleKey = title.trim().toLowerCase();
     const seen = new Map<string, number>();
     const duplicates = new Set<number>();
 
-    items.forEach(({ id, title: itemTitle }) => {
-      const key = itemTitle.trim().toLowerCase();
+    items.forEach((item) => {
+      const titleKey = item.title.trim().toLowerCase();
 
-      if (!key) {
+      if (!titleKey) {
         return;
       }
 
-      if (knownKeys.has(key)) {
-        duplicates.add(id);
+      if (
+        titleKey === seriesTitleKey ||
+        (providerTitleKeys.has(titleKey) && getSceneSeasonNumber(item) === null)
+      ) {
+        duplicates.add(item.id);
       }
 
+      const key = getAliasKey(item);
       const existingId = seen.get(key);
 
       if (existingId === undefined) {
-        seen.set(key, id);
+        seen.set(key, item.id);
       } else {
         duplicates.add(existingId);
-        duplicates.add(id);
+        duplicates.add(item.id);
       }
     });
 
     return duplicates;
-  }, [items, knownKeys]);
+  }, [title, items, providerTitleKeys]);
 
-  const handleTitleChange = useCallback((id: number, newTitle: string) => {
-    setItems((currentItems) =>
-      currentItems.map((item) =>
-        item.id === id ? { ...item, title: newTitle } : item
-      )
-    );
-  }, []);
+  const updateItem = useCallback(
+    (id: number, changes: Partial<Omit<AliasItem, 'id'>>) => {
+      setItems((currentItems) =>
+        currentItems.map((item) =>
+          item.id === id ? { ...item, ...changes } : item
+        )
+      );
+    },
+    []
+  );
+
+  const handleTitleChange = useCallback(
+    (id: number, newTitle: string) => {
+      updateItem(id, { title: newTitle });
+    },
+    [updateItem]
+  );
+
+  const handleSeasonChange = useCallback(
+    (id: number, seasonNumber: number | null) => {
+      updateItem(id, { seasonNumber, releaseSeasonNumber: seasonNumber });
+    },
+    [updateItem]
+  );
+
+  const handleReleaseSeasonChange = useCallback(
+    (id: number, releaseSeasonNumber: number | null) => {
+      updateItem(id, { releaseSeasonNumber });
+    },
+    [updateItem]
+  );
 
   const handleRemovePress = useCallback((id: number) => {
     setItems((currentItems) => currentItems.filter((item) => item.id !== id));
@@ -144,24 +221,33 @@ function SeriesAliasesModalContent({
   const handleAddPress = useCallback(() => {
     setItems((currentItems) => [
       ...currentItems,
-      { id: nextId.current++, title: '' },
+      {
+        id: nextId.current++,
+        title: '',
+        seasonNumber: null,
+        releaseSeasonNumber: null,
+      },
     ]);
   }, []);
 
   const handleSavePress = useCallback(() => {
     const seen = new Set<string>();
-    const newAliases: string[] = [];
+    const newAliases: SeriesAlias[] = [];
 
-    items.forEach(({ title: itemTitle }) => {
-      const trimmed = itemTitle.trim();
-      const key = trimmed.toLowerCase();
+    items.forEach((item) => {
+      const trimmed = item.title.trim();
+      const key = getAliasKey(item);
 
       if (!trimmed || seen.has(key)) {
         return;
       }
 
       seen.add(key);
-      newAliases.push(trimmed);
+      newAliases.push({
+        title: trimmed,
+        seasonNumber: item.seasonNumber,
+        sceneSeasonNumber: getSceneSeasonNumber(item),
+      });
     });
 
     saveSeries({
@@ -186,6 +272,10 @@ function SeriesAliasesModalContent({
             <div>{translate('AliasesHelpText')}</div>
 
             <div className={styles.sceneMappingInfo}>
+              {translate('AliasesSeasonHelpText')}
+            </div>
+
+            <div className={styles.sceneMappingInfo}>
               <InlineMarkdown
                 data={translate('AliasesSceneMappingInfo', {
                   url: SCENE_MAPPING_URL,
@@ -197,14 +287,19 @@ function SeriesAliasesModalContent({
           {items.length || providerTitles.length ? (
             <Table columns={COLUMNS} horizontalScroll={false}>
               <TableBody>
-                {items.map(({ id, title: itemTitle }) => {
+                {items.map((item) => {
                   return (
                     <SeriesAliasRow
-                      key={id}
-                      id={id}
-                      title={itemTitle}
-                      isDuplicate={duplicateIds.has(id)}
+                      key={item.id}
+                      id={item.id}
+                      title={item.title}
+                      seasonNumber={item.seasonNumber}
+                      releaseSeasonNumber={item.releaseSeasonNumber}
+                      seasonOptions={seasonOptions}
+                      isDuplicate={duplicateIds.has(item.id)}
                       onTitleChange={handleTitleChange}
+                      onSeasonChange={handleSeasonChange}
+                      onReleaseSeasonChange={handleReleaseSeasonChange}
                       onRemovePress={handleRemovePress}
                     />
                   );

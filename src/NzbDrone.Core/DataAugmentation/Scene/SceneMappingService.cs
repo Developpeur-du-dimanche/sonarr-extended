@@ -270,16 +270,19 @@ namespace NzbDrone.Core.DataAugmentation.Scene
 
         private IEnumerable<SceneMapping> GetSeriesAliasMappings()
         {
-            var aliases = _seriesAliasService.GetAllTitlesByTvdbId() ?? new List<KeyValuePair<int, string>>();
+            var aliases = _seriesAliasService.GetAllWithTvdbId() ?? new List<SeriesAliasWithTvdbId>();
 
             return aliases.Select(alias => new SceneMapping
             {
-                Title = alias.Value,
-                ParseTerm = alias.Value.CleanSeriesTitle(),
-                SearchTerm = alias.Value,
-                TvdbId = alias.Key,
-                SeasonNumber = -1,
-                SceneSeasonNumber = -1,
+                Title = alias.Title,
+                ParseTerm = alias.Title.CleanSeriesTitle(),
+                SearchTerm = alias.Title,
+                TvdbId = alias.TvdbId,
+                SeasonNumber = alias.SeasonNumber ?? -1,
+
+                // Must stay null rather than -1 for a season alias without release season: parsing shifts the
+                // season by SeasonNumber - SceneSeasonNumber whenever SceneSeasonNumber has a value.
+                SceneSeasonNumber = alias.SeasonNumber.HasValue ? alias.SceneSeasonNumber : -1,
                 Type = SceneMapping.SeriesAliasType
             });
         }
