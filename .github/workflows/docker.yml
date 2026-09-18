@@ -89,6 +89,7 @@ jobs:
           INFO
 
           cp distribution/docker/Dockerfile $context/Dockerfile
+          cp distribution/docker/entrypoint.sh $context/entrypoint.sh
 
       - name: Docker Metadata
         id: metadata
