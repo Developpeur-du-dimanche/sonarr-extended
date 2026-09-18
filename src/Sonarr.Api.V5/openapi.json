@@ -34,7 +34,35 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiInfoResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login/sso": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "parameters": [
+          {
+            "name": "returnUrl",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Found"
           }
         }
       }
@@ -85,8 +113,18 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "OK"
+          "302": {
+            "description": "Found"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       },
@@ -107,8 +145,8 @@
           "Authentication"
         ],
         "responses": {
-          "200": {
-            "description": "OK"
+          "302": {
+            "description": "Found"
           }
         }
       }
@@ -348,7 +386,9 @@
             "description": "OK",
             "content": {
               "application/json": {
-                "schema": { }
+                "schema": {
+                  "$ref": "#/components/schemas/BackupRestoreResource"
+                }
               }
             }
           },
@@ -368,7 +408,9 @@
             "description": "OK",
             "content": {
               "application/json": {
-                "schema": { }
+                "schema": {
+                  "$ref": "#/components/schemas/BackupRestoreResource"
+                }
               }
             }
           },
@@ -376,7 +418,9 @@
             "description": "Bad Request",
             "content": {
               "application/json": {
-                "schema": { }
+                "schema": {
+                  "$ref": "#/components/schemas/BackupRestoreErrorResource"
+                }
               }
             }
           }
@@ -488,16 +532,6 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BlocklistBulkResource"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BlocklistBulkResource"
-              }
-            },
-            "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/BlocklistBulkResource"
               }
@@ -2698,7 +2732,9 @@
             "description": "OK",
             "content": {
               "application/json": {
-                "schema": { }
+                "schema": {
+                  "$ref": "#/components/schemas/FileSystemTypeResource"
+                }
               }
             }
           }
@@ -2726,7 +2762,9 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { }
+                  "items": {
+                    "$ref": "#/components/schemas/FileSystemMediaFileResource"
+                  }
                 }
               }
             }
@@ -4519,6 +4557,16 @@
         "responses": {
           "404": {
             "description": "Not Found"
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
@@ -4619,6 +4667,38 @@
           },
           "400": {
             "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/api/v5/mediacover/{seriesId}/{filename}": {
+      "get": {
+        "tags": [
+          "MediaCover"
+        ],
+        "parameters": [
+          {
+            "name": "seriesId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "(.+)\\.(jpg|png|gif)",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Not Found"
           }
         }
       }
@@ -5005,6 +5085,97 @@
         "responses": {
           "400": {
             "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/api/v5/settings/metadatasource": {
+      "get": {
+        "tags": [
+          "MetadataSourceSettings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetadataSourceSettingsResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v5/settings/metadatasource/{id}": {
+      "put": {
+        "tags": [
+          "MetadataSourceSettings"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MetadataSourceSettingsResource"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetadataSourceSettingsResource"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "MetadataSourceSettings"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetadataSourceSettingsResource"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
           }
         }
       }
@@ -5421,6 +5592,16 @@
                 }
               }
             }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PingResource"
+                }
+              }
+            }
           }
         }
       },
@@ -5431,6 +5612,16 @@
         "responses": {
           "200": {
             "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PingResource"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
             "content": {
               "application/json": {
                 "schema": {
@@ -5460,16 +5651,6 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/QualityDefinitionResource"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/QualityDefinitionResource"
-              }
-            },
-            "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/QualityDefinitionResource"
               }
@@ -6492,16 +6673,6 @@
               "schema": {
                 "$ref": "#/components/schemas/RemotePathMappingResource"
               }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RemotePathMappingResource"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RemotePathMappingResource"
-              }
             }
           }
         },
@@ -7008,16 +7179,6 @@
               "schema": {
                 "$ref": "#/components/schemas/SeriesEditorResource"
               }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SeriesEditorResource"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/SeriesEditorResource"
-              }
             }
           }
         },
@@ -7047,16 +7208,6 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SeriesEditorResource"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SeriesEditorResource"
-              }
-            },
-            "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/SeriesEditorResource"
               }
@@ -7091,7 +7242,9 @@
             "description": "OK",
             "content": {
               "application/json": {
-                "schema": { }
+                "schema": {
+                  "$ref": "#/components/schemas/SeriesFolderResource"
+                }
               }
             }
           }
@@ -7159,6 +7312,18 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/loggedout": {
+      "get": {
+        "tags": [
+          "StaticResource"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -7355,7 +7520,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
@@ -7395,7 +7567,9 @@
             "description": "OK",
             "content": {
               "application/json": {
-                "schema": { }
+                "schema": {
+                  "$ref": "#/components/schemas/SystemShutdownResource"
+                }
               }
             }
           }
@@ -7412,7 +7586,9 @@
             "description": "OK",
             "content": {
               "application/json": {
-                "schema": { }
+                "schema": {
+                  "$ref": "#/components/schemas/SystemRestartResource"
+                }
               }
             }
           }
@@ -7673,6 +7849,38 @@
         }
       }
     },
+    "/api/v5/tmdb/episodegroup": {
+      "get": {
+        "tags": [
+          "TmdbEpisodeGroup"
+        ],
+        "parameters": [
+          {
+            "name": "tmdbId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TmdbEpisodeGroupResource"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v5/settings/ui": {
       "get": {
         "tags": [
@@ -7827,6 +8035,16 @@
         "responses": {
           "404": {
             "description": "Not Found"
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
@@ -7974,6 +8192,23 @@
         },
         "additionalProperties": false
       },
+      "ApiInfoResource": {
+        "type": "object",
+        "properties": {
+          "current": {
+            "type": "string",
+            "nullable": true
+          },
+          "deprecated": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "ApplyTags": {
         "enum": [
           "add",
@@ -7995,7 +8230,8 @@
           "none",
           "basic",
           "forms",
-          "external"
+          "external",
+          "oidc"
         ],
         "type": "string"
       },
@@ -8096,6 +8332,25 @@
           "time": {
             "type": "string",
             "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "BackupRestoreErrorResource": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "BackupRestoreResource": {
+        "type": "object",
+        "properties": {
+          "restartRequired": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -9126,6 +9381,13 @@
         ],
         "type": "string"
       },
+      "EpisodeOrderType": {
+        "enum": [
+          "tvdb",
+          "tmdb"
+        ],
+        "type": "string"
+      },
       "EpisodeResource": {
         "type": "object",
         "properties": {
@@ -9396,6 +9658,24 @@
         ],
         "type": "string"
       },
+      "FileSystemMediaFileResource": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "nullable": true
+          },
+          "relativePath": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "FileSystemModel": {
         "type": "object",
         "properties": {
@@ -9450,6 +9730,15 @@
         },
         "additionalProperties": false
       },
+      "FileSystemTypeResource": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/FileSystemEntityType"
+          }
+        },
+        "additionalProperties": false
+      },
       "GeneralSettingsResource": {
         "type": "object",
         "properties": {
@@ -9497,6 +9786,26 @@
             "nullable": true
           },
           "passwordConfirmation": {
+            "type": "string",
+            "nullable": true
+          },
+          "oidcAuthority": {
+            "type": "string",
+            "nullable": true
+          },
+          "oidcClientId": {
+            "type": "string",
+            "nullable": true
+          },
+          "oidcClientSecret": {
+            "type": "string",
+            "nullable": true
+          },
+          "oidcUserIdentifier": {
+            "type": "string",
+            "nullable": true
+          },
+          "oidcScopes": {
             "type": "string",
             "nullable": true
           },
@@ -9638,6 +9947,9 @@
           "mountSeries",
           "notificationStatusAll",
           "notificationStatusSingle",
+          "oidcAuthorityNotSecure",
+          "oidcDiscoveryFailed",
+          "oidcNotConfigured",
           "package",
           "proxyBadRequest",
           "proxyFailed",
@@ -10948,6 +11260,20 @@
         },
         "additionalProperties": false
       },
+      "MetadataSourceSettingsResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tmdbApiKey": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "MissingSubresource": {
         "enum": [
           "series",
@@ -11176,9 +11502,18 @@
           "quality": {
             "$ref": "#/components/schemas/QualityModel"
           },
+          "seasonNumbers": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
           "seasonNumber": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "episodeNumbers": {
             "type": "array",
@@ -11222,9 +11557,13 @@
             "type": "boolean"
           },
           "isMultiSeason": {
-            "type": "boolean"
+            "type": "boolean",
+            "readOnly": true
           },
           "isSeasonExtra": {
+            "type": "boolean"
+          },
+          "isSeasonTitle": {
             "type": "boolean"
           },
           "isSplitEpisode": {
@@ -11298,7 +11637,8 @@
           },
           "seasonNumber": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "airDate": {
             "type": "string",
@@ -11357,6 +11697,33 @@
           "userName"
         ],
         "type": "string"
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
       },
       "ProfileFormatItemResource": {
         "type": "object",
@@ -12655,6 +13022,26 @@
         },
         "additionalProperties": false
       },
+      "SeriesAliasResource": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "seasonNumber": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "sceneSeasonNumber": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "SeriesEditorResource": {
         "type": "object",
         "properties": {
@@ -12712,6 +13099,16 @@
         },
         "additionalProperties": false
       },
+      "SeriesFolderResource": {
+        "type": "object",
+        "properties": {
+          "folder": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "SeriesResource": {
         "type": "object",
         "properties": {
@@ -12727,6 +13124,13 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AlternateTitleResource"
+            },
+            "nullable": true
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SeriesAliasResource"
             },
             "nullable": true
           },
@@ -12811,6 +13215,13 @@
           },
           "useSceneNumbering": {
             "type": "boolean"
+          },
+          "episodeOrder": {
+            "$ref": "#/components/schemas/EpisodeOrderType"
+          },
+          "tmdbEpisodeGroupId": {
+            "type": "string",
+            "nullable": true
           },
           "runtime": {
             "type": "integer",
@@ -13301,6 +13712,24 @@
         },
         "additionalProperties": false
       },
+      "SystemRestartResource": {
+        "type": "object",
+        "properties": {
+          "restarting": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SystemShutdownResource": {
+        "type": "object",
+        "properties": {
+          "shuttingDown": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "TagDetailsResource": {
         "type": "object",
         "properties": {
@@ -13467,6 +13896,47 @@
           }
         },
         "additionalProperties": false
+      },
+      "TmdbEpisodeGroupResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "$ref": "#/components/schemas/TmdbEpisodeGroupType"
+          },
+          "episodeCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "groupCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TmdbEpisodeGroupType": {
+        "enum": [
+          "originalAirDate",
+          "absolute",
+          "dvd",
+          "digital",
+          "storyArc",
+          "production",
+          "tv"
+        ],
+        "type": "string"
       },
       "TrackedDownloadState": {
         "enum": [
@@ -13853,10 +14323,16 @@
       "name": "ManualImport"
     },
     {
+      "name": "MediaCover"
+    },
+    {
       "name": "MediaManagementSettings"
     },
     {
       "name": "Metadata"
+    },
+    {
+      "name": "MetadataSourceSettings"
     },
     {
       "name": "Missing"
@@ -13941,6 +14417,9 @@
     },
     {
       "name": "Task"
+    },
+    {
+      "name": "TmdbEpisodeGroup"
     },
     {
       "name": "UiSettings"
