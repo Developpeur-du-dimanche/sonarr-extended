@@ -39,11 +39,32 @@ namespace NzbDrone.Core.MetadataSource.Tmdb
 
         public List<Episode> GetEpisodes(int tmdbId, string episodeGroupId)
         {
-            if (episodeGroupId.IsNotNullOrWhiteSpace())
-            {
-                return GetEpisodeGroupEpisodes(episodeGroupId);
-            }
+            var episodes = episodeGroupId.IsNotNullOrWhiteSpace()
+                ? GetEpisodeGroupEpisodes(episodeGroupId)
+                : GetShowEpisodes(tmdbId);
 
+            SetAbsoluteEpisodeNumbers(episodes);
+
+            return episodes;
+        }
+
+        public List<TmdbEpisodeGroup> GetEpisodeGroups(int tmdbId)
+        {
+            var groups = Execute<TmdbEpisodeGroupListResource>($"tv/{tmdbId}/episode_groups");
+
+            return [.. groups.Results.Select(g => new TmdbEpisodeGroup
+            {
+                Id = g.Id,
+                Name = g.Name,
+                Description = g.Description,
+                Type = (TmdbEpisodeGroupType)g.Type,
+                EpisodeCount = g.EpisodeCount,
+                GroupCount = g.GroupCount
+            })];
+        }
+
+        private List<Episode> GetShowEpisodes(int tmdbId)
+        {
             var show = Execute<TmdbShowResource>($"tv/{tmdbId}");
             var episodes = new List<Episode>();
 
@@ -57,30 +78,35 @@ namespace NzbDrone.Core.MetadataSource.Tmdb
             return episodes;
         }
 
-        public List<TmdbEpisodeGroup> GetEpisodeGroups(int tmdbId)
-        {
-            var groups = Execute<TmdbEpisodeGroupListResource>($"tv/{tmdbId}/episode_groups");
-
-            return groups.Results.Select(g => new TmdbEpisodeGroup
-            {
-                Id = g.Id,
-                Name = g.Name,
-                Description = g.Description,
-                Type = (TmdbEpisodeGroupType)g.Type,
-                EpisodeCount = g.EpisodeCount,
-                GroupCount = g.GroupCount
-            }).ToList();
-        }
-
         private List<Episode> GetEpisodeGroupEpisodes(string episodeGroupId)
         {
             var details = Execute<TmdbEpisodeGroupDetailsResource>($"tv/episode_group/{episodeGroupId}");
 
             // In an episode group each group is a season, its order is the season number
             // and the order of an episode within the group is its (zero based) episode number.
-            return details.Groups
-                .SelectMany(g => g.Episodes.Select(e => MapEpisode(e, g.Order, e.Order + 1)))
-                .ToList();
+            return [.. details.Groups.SelectMany(g => g.Episodes.Select(e => MapEpisode(e, g.Order, e.Order + 1)))];
+        }
+
+        private void SetAbsoluteEpisodeNumbers(List<Episode> episodes)
+        {
+            var absoluteEpisodeNumber = 1;
+
+            foreach (var episode in episodes.Where(e => e.SeasonNumber > 0)
+                                            .OrderBy(e => e.SeasonNumber)
+                                            .ThenBy(e => e.EpisodeNumber))
+            {
+                episode.AbsoluteEpisodeNumber = absoluteEpisodeNumber++;
+            }
+
+            if (_logger.IsDebugEnabled)
+            {
+                var ranges = episodes.Where(e => e.AbsoluteEpisodeNumber.HasValue)
+                                     .GroupBy(e => e.SeasonNumber)
+                                     .OrderBy(g => g.Key)
+                                     .Select(g => $"S{g.Key:00}: {g.Min(e => e.AbsoluteEpisodeNumber)}-{g.Max(e => e.AbsoluteEpisodeNumber)}");
+
+                _logger.Debug("Derived absolute episode numbers from the TMDB episode order ({0})", string.Join(", ", ranges));
+            }
         }
 
         private T Execute<T>(string resource)
@@ -98,7 +124,7 @@ namespace NzbDrone.Core.MetadataSource.Tmdb
                 .Accept(HttpAccept.Json);
 
             // v4 read access tokens are JWTs, v3 API keys are passed as a query parameter
-            if (apiKey.StartsWith("eyJ"))
+            if (apiKey.StartsWith("eyJ", StringComparison.OrdinalIgnoreCase))
             {
                 requestBuilder.SetHeader("Authorization", $"Bearer {apiKey}");
             }
