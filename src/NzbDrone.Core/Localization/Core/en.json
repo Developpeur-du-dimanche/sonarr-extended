@@ -1974,6 +1974,8 @@
   "ScriptPath": "Script Path",
   "Search": "Search",
   "SearchAll": "Search All",
+  "SearchByAbsoluteNumber": "Search by Absolute Episode Number",
+  "SearchByAbsoluteNumberHelpText": "Also search indexers by absolute episode number, in addition to the season and episode number. Useful for series that are released with absolute numbering but are not tagged as anime.",
   "SearchByTvdbId": "You can also search using TVDB ID of a show. eg. tvdb:71663",
   "SearchFailedError": "Search failed, please try again later.",
   "SearchForAllMissingEpisodes": "Search for all missing episodes",

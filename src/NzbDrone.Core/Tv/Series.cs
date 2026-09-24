@@ -44,6 +44,7 @@ namespace NzbDrone.Core.Tv
         public SeriesTypes SeriesType { get; set; }
         public string Network { get; set; }
         public bool UseSceneNumbering { get; set; }
+        public bool SearchByAbsoluteNumber { get; set; }
         public EpisodeOrderType EpisodeOrder { get; set; }
         public string TmdbEpisodeGroupId { get; set; }
         public string TitleSlug { get; set; }
@@ -82,6 +83,7 @@ namespace NzbDrone.Core.Tv
             MonitorNewItems = otherSeries.MonitorNewItems;
 
             SeriesType = otherSeries.SeriesType;
+            SearchByAbsoluteNumber = otherSeries.SearchByAbsoluteNumber;
             EpisodeOrder = otherSeries.EpisodeOrder;
             TmdbEpisodeGroupId = otherSeries.TmdbEpisodeGroupId;
             RootFolderPath = otherSeries.RootFolderPath;

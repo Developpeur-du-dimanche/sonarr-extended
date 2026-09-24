@@ -43,6 +43,7 @@ namespace Sonarr.Api.V3.Series
 
         // Editing Only
         public bool SeasonFolder { get; set; }
+        public bool SearchByAbsoluteNumber { get; set; }
         public bool Monitored { get; set; }
         public NewItemMonitorTypes MonitorNewItems { get; set; }
 
@@ -118,6 +119,7 @@ namespace Sonarr.Api.V3.Series
                        QualityProfileId = model.QualityProfileId,
 
                        SeasonFolder = model.SeasonFolder,
+                       SearchByAbsoluteNumber = model.SearchByAbsoluteNumber,
                        Monitored = model.Monitored,
                        MonitorNewItems = model.MonitorNewItems,
 
@@ -185,6 +187,7 @@ namespace Sonarr.Api.V3.Series
                        QualityProfileId = resource.QualityProfileId,
 
                        SeasonFolder = resource.SeasonFolder,
+                       SearchByAbsoluteNumber = resource.SearchByAbsoluteNumber,
                        Monitored = resource.Monitored,
                        MonitorNewItems = resource.MonitorNewItems,
 

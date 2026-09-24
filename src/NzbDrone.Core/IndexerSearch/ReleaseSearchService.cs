@@ -84,13 +84,24 @@ namespace NzbDrone.Core.IndexerSearch
                 return await SearchAnime(series, episode, false, userInvokedSearch, interactiveSearch);
             }
 
+            var downloadDecisions = new List<DownloadDecision>();
+
             if (episode.SeasonNumber == 0)
             {
                 // Search for special episodes in season 0
-                return await SearchSpecial(series, new List<Episode> { episode }, false, userInvokedSearch, interactiveSearch);
+                downloadDecisions.AddRange(await SearchSpecial(series, new List<Episode> { episode }, false, userInvokedSearch, interactiveSearch));
+            }
+            else
+            {
+                downloadDecisions.AddRange(await SearchSingle(series, episode, false, userInvokedSearch, interactiveSearch));
             }
 
-            return await SearchSingle(series, episode, false, userInvokedSearch, interactiveSearch);
+            if (ShouldAlsoSearchByAbsoluteNumber(series, episode))
+            {
+                downloadDecisions.AddRange(await SearchAnime(series, episode, false, userInvokedSearch, interactiveSearch));
+            }
+
+            return DeDupeDecisions(downloadDecisions);
         }
 
         public async Task<List<DownloadDecision>> SeasonSearch(int seriesId, int seasonNumber, bool missingOnly, bool monitoredOnly, bool userInvokedSearch, bool interactiveSearch)
@@ -155,6 +166,11 @@ namespace NzbDrone.Core.IndexerSearch
                     var decisions = await Dispatch(indexer => indexer.Fetch(searchSpec), searchSpec);
                     downloadDecisions.AddRange(decisions);
                 }
+            }
+
+            if (series.SearchByAbsoluteNumber)
+            {
+                downloadDecisions.AddRange(await SearchAbsoluteSeason(series, episodes, monitoredOnly, userInvokedSearch, interactiveSearch));
             }
 
             return DeDupeDecisions(downloadDecisions);
@@ -330,6 +346,30 @@ namespace NzbDrone.Core.IndexerSearch
                     AbsoluteEpisodeNumber = episode.SceneSeasonNumber ?? episode.AbsoluteEpisodeNumber
                 };
             }
+        }
+
+        private static bool ShouldAlsoSearchByAbsoluteNumber(Series series, Episode episode)
+        {
+            return series.SearchByAbsoluteNumber &&
+                   (episode.SceneAbsoluteEpisodeNumber ?? episode.AbsoluteEpisodeNumber).HasValue;
+        }
+
+        private async Task<List<DownloadDecision>> SearchAbsoluteSeason(Series series, List<Episode> episodes, bool monitoredOnly, bool userInvokedSearch, bool interactiveSearch)
+        {
+            var downloadDecisions = new List<DownloadDecision>();
+
+            var episodesToSearch = episodes
+                .Where(ep => interactiveSearch || !monitoredOnly || ep.Monitored)
+                .Where(ep => ep.AirDateUtc.HasValue && ep.AirDateUtc.Value.Before(DateTime.UtcNow))
+                .Where(ep => ShouldAlsoSearchByAbsoluteNumber(series, ep))
+                .ToList();
+
+            foreach (var episode in episodesToSearch)
+            {
+                downloadDecisions.AddRange(await SearchAnime(series, episode, monitoredOnly, userInvokedSearch, interactiveSearch, true));
+            }
+
+            return downloadDecisions;
         }
 
         private async Task<List<DownloadDecision>> SearchSingle(Series series, Episode episode, bool monitoredOnly, bool userInvokedSearch, bool interactiveSearch)
