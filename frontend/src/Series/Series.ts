@@ -100,6 +100,7 @@ interface Series extends ModelBase {
   ratings: Ratings;
   rootFolderPath: string;
   runtime: number;
+  searchByAbsoluteNumber: boolean;
   seasonFolder: boolean;
   seasons: Season[];
   seriesType: SeriesType;

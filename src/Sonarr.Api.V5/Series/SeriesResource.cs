@@ -30,6 +30,7 @@ public class SeriesResource : RestResource
     public string? Path { get; set; }
     public int QualityProfileId { get; set; }
     public bool SeasonFolder { get; set; }
+    public bool SearchByAbsoluteNumber { get; set; }
     public bool Monitored { get; set; }
     public NewItemMonitorTypes MonitorNewItems { get; set; }
     public bool UseSceneNumbering { get; set; }
@@ -85,6 +86,7 @@ public static class SeriesResourceMapper
             Path = model.Path,
             QualityProfileId = model.QualityProfileId,
             SeasonFolder = model.SeasonFolder,
+            SearchByAbsoluteNumber = model.SearchByAbsoluteNumber,
             Monitored = model.Monitored,
             MonitorNewItems = model.MonitorNewItems,
             UseSceneNumbering = model.UseSceneNumbering,
@@ -130,6 +132,7 @@ public static class SeriesResourceMapper
             Path = resource.Path,
             QualityProfileId = resource.QualityProfileId,
             SeasonFolder = resource.SeasonFolder,
+            SearchByAbsoluteNumber = resource.SearchByAbsoluteNumber,
             Monitored = resource.Monitored,
             MonitorNewItems = resource.MonitorNewItems,
             UseSceneNumbering = resource.UseSceneNumbering,

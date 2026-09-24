@@ -55,6 +55,7 @@ function EditSeriesModalContent({
     seasonFolder,
     qualityProfileId,
     seriesType,
+    searchByAbsoluteNumber,
     episodeOrder,
     tmdbEpisodeGroupId,
     tmdbId,
@@ -85,6 +86,7 @@ function EditSeriesModalContent({
         seasonFolder,
         qualityProfileId,
         seriesType,
+        searchByAbsoluteNumber,
         episodeOrder,
         tmdbEpisodeGroupId: tmdbEpisodeGroupId ?? '',
         path,
@@ -99,6 +101,7 @@ function EditSeriesModalContent({
     seasonFolder,
     qualityProfileId,
     seriesType,
+    searchByAbsoluteNumber,
     episodeOrder,
     tmdbEpisodeGroupId,
     path,
@@ -108,6 +111,7 @@ function EditSeriesModalContent({
   ]);
 
   const isTmdbOrder = settings.episodeOrder.value === 'tmdb';
+  const isAnime = settings.seriesType.value === 'anime';
 
   const { data: episodeGroups, error: episodeGroupsError } = useApiQuery<
     TmdbEpisodeGroup[]
@@ -291,6 +295,20 @@ function EditSeriesModalContent({
               onChange={handleInputChange}
             />
           </FormGroup>
+
+          {isAnime ? null : (
+            <FormGroup size={sizes.MEDIUM}>
+              <FormLabel>{translate('SearchByAbsoluteNumber')}</FormLabel>
+
+              <FormInputGroup
+                type={inputTypes.CHECK}
+                name="searchByAbsoluteNumber"
+                helpText={translate('SearchByAbsoluteNumberHelpText')}
+                {...settings.searchByAbsoluteNumber}
+                onChange={handleInputChange}
+              />
+            </FormGroup>
+          )}
 
           <FormGroup size={sizes.MEDIUM}>
             <FormLabel>{translate('EpisodeOrder')}</FormLabel>
