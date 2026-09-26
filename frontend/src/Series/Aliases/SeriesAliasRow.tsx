@@ -8,7 +8,7 @@ import TableRow from 'Components/Table/TableRow';
 import { icons } from 'Helpers/Props';
 import { InputChanged } from 'typings/inputs';
 import translate from 'Utilities/String/translate';
-import styles from './SeriesAliasRow.css';
+import styles from './SeriesAliasRow.module.css';
 
 export const ALL_SEASONS = -1;
 

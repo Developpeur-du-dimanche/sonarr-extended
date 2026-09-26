@@ -28,7 +28,7 @@ import filterAlternateTitles from 'Utilities/Series/filterAlternateTitles';
 import translate from 'Utilities/String/translate';
 import SeriesAliasRow, { ALL_SEASONS } from './SeriesAliasRow';
 import SeriesAlternateTitleRow from './SeriesAlternateTitleRow';
-import styles from './SeriesAliasesModalContent.css';
+import styles from './SeriesAliasesModalContent.module.css';
 
 const SCENE_MAPPING_URL =
   'https://docs.google.com/spreadsheets/d/1PiIvzijwcdALKQWfGE3j4lwnOqmDkhB48fyQTArJpI4/edit?pli=1&gid=675284162#gid=675284162';
