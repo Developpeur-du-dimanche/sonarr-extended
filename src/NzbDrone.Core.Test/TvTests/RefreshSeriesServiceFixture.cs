@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FizzWare.NBuilder;
+using FluentAssertions;
 using Moq;
 using NUnit.Framework;
 using NzbDrone.Common.Extensions;
@@ -10,6 +11,7 @@ using NzbDrone.Core.AutoTagging;
 using NzbDrone.Core.Exceptions;
 using NzbDrone.Core.MediaFiles;
 using NzbDrone.Core.MetadataSource;
+using NzbDrone.Core.MetadataSource.Tmdb;
 using NzbDrone.Core.Test.Framework;
 using NzbDrone.Core.Tv;
 using NzbDrone.Core.Tv.Commands;
@@ -259,6 +261,131 @@ namespace NzbDrone.Core.Test.TvTests
                   .Verify(v => v.Scan(_series), Times.Once());
 
             ExceptionVerification.ExpectedErrors(1);
+        }
+
+        private List<Episode> GivenTmdbEpisodeOrder(List<Episode> tvdbEpisodes)
+        {
+            _series.EpisodeOrder = EpisodeOrderType.Tmdb;
+            _series.TmdbId = 1399;
+            _series.TmdbEpisodeGroupId = "group";
+
+            var newSeriesInfo = _series.JsonClone();
+            newSeriesInfo.Seasons = new List<Season>
+            {
+                new Season { SeasonNumber = 1, Images = new List<MediaCover.MediaCover> { new MediaCover.MediaCover(MediaCover.MediaCoverTypes.Poster, "poster") } }
+            };
+
+            Mocker.GetMock<IProvideSeriesInfo>()
+                  .Setup(s => s.GetSeriesInfo(_series.TvdbId))
+                  .Returns(new Tuple<Series, List<Episode>>(newSeriesInfo, tvdbEpisodes));
+
+            var tmdbEpisodes = new List<Episode>
+            {
+                new Episode { SeasonNumber = 1, EpisodeNumber = 1, AirDate = "2020-01-01" },
+                new Episode { SeasonNumber = 2, EpisodeNumber = 1, AirDate = "2020-01-08" },
+                new Episode { SeasonNumber = 2, EpisodeNumber = 2 }
+            };
+
+            Mocker.GetMock<ITmdbProxy>()
+                  .SetupGet(s => s.IsConfigured)
+                  .Returns(true);
+
+            Mocker.GetMock<ITmdbProxy>()
+                  .Setup(s => s.GetEpisodes(1399, "group"))
+                  .Returns(tmdbEpisodes);
+
+            return tmdbEpisodes;
+        }
+
+        [Test]
+        public void should_not_get_tmdb_episodes_if_episode_order_is_tvdb()
+        {
+            _series.EpisodeOrder = EpisodeOrderType.Tvdb;
+            _series.TmdbId = 1399;
+
+            GivenNewSeriesInfo(_series.JsonClone());
+
+            Subject.Execute(new RefreshSeriesCommand(new List<int> { _series.Id }));
+
+            Mocker.GetMock<ITmdbProxy>()
+                  .Verify(v => v.GetEpisodes(It.IsAny<int>(), It.IsAny<string>()), Times.Never());
+        }
+
+        [Test]
+        public void should_refresh_with_tmdb_episodes_if_episode_order_is_tmdb()
+        {
+            var tvdbEpisodes = new List<Episode>
+            {
+                new Episode { SeasonNumber = 1, EpisodeNumber = 1, AirDate = "2020-01-01", AirDateUtc = new DateTime(2020, 1, 2, 2, 0, 0, DateTimeKind.Utc) }
+            };
+
+            var tmdbEpisodes = GivenTmdbEpisodeOrder(tvdbEpisodes);
+
+            Subject.Execute(new RefreshSeriesCommand(new List<int> { _series.Id }));
+
+            Mocker.GetMock<IRefreshEpisodeService>()
+                  .Verify(v => v.RefreshEpisodeInfo(It.IsAny<Series>(), tmdbEpisodes), Times.Once());
+
+            Mocker.GetMock<ISeriesService>()
+                  .Verify(v => v.UpdateSeries(It.Is<Series>(s => s.Seasons.Select(n => n.SeasonNumber).SequenceEqual(new[] { 1, 2 }) &&
+                                                                  s.Seasons.First().Images.Count == 1),
+                                              It.IsAny<bool>(),
+                                              It.IsAny<bool>()));
+        }
+
+        [Test]
+        public void should_apply_tvdb_air_time_to_tmdb_episodes()
+        {
+            var tvdbEpisodes = new List<Episode>
+            {
+                new Episode { SeasonNumber = 1, EpisodeNumber = 1, AirDate = "2020-01-01", AirDateUtc = new DateTime(2020, 1, 2, 2, 0, 0, DateTimeKind.Utc) }
+            };
+
+            var tmdbEpisodes = GivenTmdbEpisodeOrder(tvdbEpisodes);
+
+            Subject.Execute(new RefreshSeriesCommand(new List<int> { _series.Id }));
+
+            tmdbEpisodes[0].AirDateUtc.Should().Be(new DateTime(2020, 1, 2, 2, 0, 0, DateTimeKind.Utc));
+            tmdbEpisodes[1].AirDateUtc.Should().Be(new DateTime(2020, 1, 9, 2, 0, 0, DateTimeKind.Utc));
+            tmdbEpisodes[2].AirDateUtc.Should().BeNull();
+        }
+
+        [Test]
+        public void should_not_refresh_episodes_if_episode_order_is_tmdb_without_tmdb_id()
+        {
+            GivenTmdbEpisodeOrder(new List<Episode>());
+            _series.TmdbId = 0;
+
+            Mocker.GetMock<IProvideSeriesInfo>()
+                  .Setup(s => s.GetSeriesInfo(_series.TvdbId))
+                  .Returns(new Tuple<Series, List<Episode>>(_series.JsonClone(), new List<Episode>()));
+
+            Subject.Execute(new RefreshSeriesCommand(new List<int> { _series.Id }));
+
+            Mocker.GetMock<ITmdbProxy>()
+                  .Verify(v => v.GetEpisodes(It.IsAny<int>(), It.IsAny<string>()), Times.Never());
+
+            Mocker.GetMock<IRefreshEpisodeService>()
+                  .Verify(v => v.RefreshEpisodeInfo(It.IsAny<Series>(), It.IsAny<IEnumerable<Episode>>()), Times.Never());
+
+            ExceptionVerification.ExpectedWarns(1);
+        }
+
+        [Test]
+        public void should_not_refresh_episodes_if_episode_order_is_tmdb_without_api_key()
+        {
+            GivenTmdbEpisodeOrder(new List<Episode>());
+
+            Mocker.GetMock<ITmdbProxy>()
+                  .SetupGet(s => s.IsConfigured)
+                  .Returns(false);
+
+            Subject.Execute(new RefreshSeriesCommand(new List<int> { _series.Id }));
+
+            Mocker.GetMock<IRefreshEpisodeService>()
+                  .Verify(v => v.RefreshEpisodeInfo(It.IsAny<Series>(), It.IsAny<IEnumerable<Episode>>()), Times.Never());
+
+            ExceptionVerification.ExpectedWarns(1);
         }
 
         [Test]

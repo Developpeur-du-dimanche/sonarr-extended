@@ -6,6 +6,7 @@ import FormInputButton from 'Components/Form/FormInputButton';
 import FormInputHelpText from 'Components/Form/FormInputHelpText';
 import FormLabel from 'Components/Form/FormLabel';
 import FormRow from 'Components/Form/FormRow';
+import { EnhancedSelectInputValue } from 'Components/Form/Select/EnhancedSelectInput';
 import Icon from 'Components/Icon';
 import Button from 'Components/Link/Button';
 import SpinnerErrorButton from 'Components/Link/SpinnerErrorButton';
@@ -14,6 +15,7 @@ import ModalContent from 'Components/Modal/ModalContent';
 import ModalFooter from 'Components/Modal/ModalFooter';
 import ModalHeader from 'Components/Modal/ModalHeader';
 import Popover from 'Components/Tooltip/Popover';
+import useApiQuery from 'Helpers/Hooks/useApiQuery';
 import { usePendingChangesStore } from 'Helpers/Hooks/usePendingChangesStore';
 import usePrevious from 'Helpers/Hooks/usePrevious';
 import {
@@ -25,6 +27,7 @@ import {
 } from 'Helpers/Props';
 import MoveSeriesModal from 'Series/MoveSeries/MoveSeriesModal';
 import Series from 'Series/Series';
+import TmdbEpisodeGroup from 'Series/TmdbEpisodeGroup';
 import { useSaveSeries, useSingleSeries } from 'Series/useSeries';
 import { InputChanged } from 'typings/inputs';
 import selectSettings from 'Utilities/selectSettings';
@@ -53,6 +56,10 @@ function EditSeriesModalContent({
     seasonFolder,
     qualityProfileId,
     seriesType,
+    searchByAbsoluteNumber,
+    episodeOrder,
+    tmdbEpisodeGroupId,
+    tmdbId,
     path,
     tags,
     rootFolderPath: initialRootFolderPath,
@@ -80,6 +87,9 @@ function EditSeriesModalContent({
         seasonFolder,
         qualityProfileId,
         seriesType,
+        searchByAbsoluteNumber,
+        episodeOrder,
+        tmdbEpisodeGroupId: tmdbEpisodeGroupId ?? '',
         path,
         tags,
       },
@@ -92,11 +102,61 @@ function EditSeriesModalContent({
     seasonFolder,
     qualityProfileId,
     seriesType,
+    searchByAbsoluteNumber,
+    episodeOrder,
+    tmdbEpisodeGroupId,
     path,
     tags,
     pendingChanges,
     saveError,
   ]);
+
+  const isTmdbOrder = settings.episodeOrder.value === 'tmdb';
+  const isAnime = settings.seriesType.value === 'anime';
+
+  const { data: episodeGroups, error: episodeGroupsError } = useApiQuery<
+    TmdbEpisodeGroup[]
+  >({
+    path: '/tmdb/episodegroup',
+    queryParams: { tmdbId },
+    queryOptions: {
+      enabled: isTmdbOrder && tmdbId > 0,
+    },
+  });
+
+  const episodeOrderOptions = useMemo<EnhancedSelectInputValue<string>[]>(
+    () => [
+      {
+        key: 'tvdb',
+        value: translate('TheTvdb'),
+      },
+      {
+        key: 'tmdb',
+        value: translate('TheMovieDb'),
+        isDisabled: !tmdbId,
+        hint: tmdbId ? undefined : translate('TmdbEpisodeOrderUnavailable'),
+      },
+    ],
+    [tmdbId]
+  );
+
+  const episodeGroupOptions = useMemo<EnhancedSelectInputValue<string>[]>(
+    () => [
+      {
+        key: '',
+        value: translate('TmdbDefaultOrder'),
+      },
+      ...(episodeGroups ?? []).map((group) => ({
+        key: group.id,
+        value: group.name,
+        hint: translate('TmdbEpisodeGroupCounts', {
+          groupCount: group.groupCount,
+          episodeCount: group.episodeCount,
+        }),
+      })),
+    ],
+    [episodeGroups]
+  );
 
   const handleInputChange = useCallback(
     ({ name, value }: InputChanged) => {
@@ -236,6 +296,56 @@ function EditSeriesModalContent({
               onChange={handleInputChange}
             />
           </FormRow>
+
+          {isAnime ? null : (
+            <FormRow size={sizes.MEDIUM}>
+              <FormLabel>{translate('SearchByAbsoluteNumber')}</FormLabel>
+
+              <FormInputHelpText
+                text={translate('SearchByAbsoluteNumberHelpText')}
+              />
+              <FormInput
+                type={inputTypes.CHECK}
+                name="searchByAbsoluteNumber"
+                {...settings.searchByAbsoluteNumber}
+                onChange={handleInputChange}
+              />
+            </FormRow>
+          )}
+
+          <FormRow size={sizes.MEDIUM}>
+            <FormLabel>{translate('EpisodeOrder')}</FormLabel>
+
+            <FormInputHelpText text={translate('EpisodeOrderHelpText')} />
+            <FormInput
+              type={inputTypes.SELECT}
+              name="episodeOrder"
+              values={episodeOrderOptions}
+              {...settings.episodeOrder}
+              onChange={handleInputChange}
+            />
+          </FormRow>
+
+          {isTmdbOrder ? (
+            <FormRow size={sizes.MEDIUM}>
+              <FormLabel>{translate('TmdbEpisodeGroup')}</FormLabel>
+
+              <FormInputHelpText text={translate('TmdbEpisodeGroupHelpText')} />
+              {episodeGroupsError ? (
+                <FormInputHelpText
+                  text={translate('TmdbEpisodeGroupsLoadError')}
+                  isWarning={true}
+                />
+              ) : null}
+              <FormInput
+                type={inputTypes.SELECT}
+                name="tmdbEpisodeGroupId"
+                values={episodeGroupOptions}
+                {...settings.tmdbEpisodeGroupId}
+                onChange={handleInputChange}
+              />
+            </FormRow>
+          ) : null}
 
           <FormRow size={sizes.MEDIUM}>
             <FormLabel>{translate('Path')}</FormLabel>

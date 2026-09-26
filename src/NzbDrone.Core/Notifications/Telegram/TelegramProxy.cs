@@ -79,7 +79,7 @@ namespace NzbDrone.Core.Notifications.Telegram
 
                 var links = new List<NotificationMetadataLink>
                     {
-                        new NotificationMetadataLink(null, "Sonarr.tv", "https://sonarr.tv")
+                        new NotificationMetadataLink(null, "Sonarr Extended", "https://github.com/Developpeur-du-dimanche/sonarr-extended")
                     };
 
                 var testMessageTitle = settings.IncludeAppNameInTitle ? brandedTitle : title;

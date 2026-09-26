@@ -33,6 +33,7 @@ import {
 import InteractiveImportModal from 'InteractiveImport/InteractiveImportModal';
 import useCountryName from 'Internationalization/useCountryName';
 import OrganizePreviewModal from 'Organize/OrganizePreviewModal';
+import SeriesAliasesModal from 'Series/Aliases/SeriesAliasesModal';
 import DeleteSeriesModal from 'Series/Delete/DeleteSeriesModal';
 import EditSeriesModal from 'Series/Edit/EditSeriesModal';
 import SeriesHistoryModal from 'Series/History/SeriesHistoryModal';
@@ -215,6 +216,7 @@ function SeriesDetails({ seriesId }: SeriesDetailsProps) {
   const [isOrganizeModalOpen, setIsOrganizeModalOpen] = useState(false);
   const [isManageEpisodesOpen, setIsManageEpisodesOpen] = useState(false);
   const [isEditSeriesModalOpen, setIsEditSeriesModalOpen] = useState(false);
+  const [isAliasesModalOpen, setIsAliasesModalOpen] = useState(false);
   const [isDeleteSeriesModalOpen, setIsDeleteSeriesModalOpen] = useState(false);
   const [isOverviewExpanded, setIsOverviewExpanded] = useState(false);
 
@@ -267,6 +269,14 @@ function SeriesDetails({ seriesId }: SeriesDetailsProps) {
 
   const handleEditSeriesModalClose = useCallback(() => {
     setIsEditSeriesModalOpen(false);
+  }, []);
+
+  const handleAliasesPress = useCallback(() => {
+    setIsAliasesModalOpen(true);
+  }, []);
+
+  const handleAliasesModalClose = useCallback(() => {
+    setIsAliasesModalOpen(false);
   }, []);
 
   const handleDeleteSeriesPress = useCallback(() => {
@@ -404,6 +414,7 @@ function SeriesDetails({ seriesId }: SeriesDetailsProps) {
     imdbId,
     tmdbId,
     title,
+    aliases,
     runtime,
     ratings,
     path,
@@ -528,6 +539,15 @@ function SeriesDetails({ seriesId }: SeriesDetailsProps) {
           />
 
           <ToolbarItem
+            id="aliases"
+            priority={1}
+            groupId="left-c"
+            label={translate('Aliases')}
+            iconName={icons.TAGS}
+            onPress={handleAliasesPress}
+          />
+
+          <ToolbarItem
             id="delete"
             priority={1}
             groupId="left-c"
@@ -577,7 +597,7 @@ function SeriesDetails({ seriesId }: SeriesDetailsProps) {
                   <div className={styles.titleContainer}>
                     <div className={styles.title}>{title}</div>
 
-                    {alternateTitles.length ? (
+                    {alternateTitles.length || aliases?.length ? (
                       <div className={styles.alternateTitlesIconContainer}>
                         <Popover
                           anchor={
@@ -587,6 +607,7 @@ function SeriesDetails({ seriesId }: SeriesDetailsProps) {
                           body={
                             <SeriesAlternateTitles
                               alternateTitles={alternateTitles}
+                              aliases={aliases}
                             />
                           }
                           position={tooltipPositions.BOTTOM}
@@ -924,6 +945,12 @@ function SeriesDetails({ seriesId }: SeriesDetailsProps) {
             seriesId={seriesId}
             onModalClose={handleEditSeriesModalClose}
             onDeleteSeriesPress={handleDeleteSeriesPress}
+          />
+
+          <SeriesAliasesModal
+            isOpen={isAliasesModalOpen}
+            seriesId={seriesId}
+            onModalClose={handleAliasesModalClose}
           />
 
           <DeleteSeriesModal

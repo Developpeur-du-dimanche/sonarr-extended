@@ -150,6 +150,57 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
         }
 
         [Test]
+        public void should_match_absolute_episode_number_for_standard_series()
+        {
+            _series.SeriesType = SeriesTypes.Standard;
+
+            _parsedEpisodeInfo.SeasonNumber = 0;
+            _parsedEpisodeInfo.EpisodeNumbers = Array.Empty<int>();
+            _parsedEpisodeInfo.AbsoluteEpisodeNumbers = new[] { 1179 };
+
+            var episode = Builder<Episode>.CreateNew()
+                                          .With(e => e.SeasonNumber = 21)
+                                          .With(e => e.EpisodeNumber = 42)
+                                          .With(e => e.AbsoluteEpisodeNumber = 1179)
+                                          .Build();
+
+            Mocker.GetMock<IEpisodeService>()
+                  .Setup(s => s.FindEpisodesBySceneNumbering(It.IsAny<int>(), It.IsAny<int>()))
+                  .Returns(new List<Episode>());
+
+            Mocker.GetMock<IEpisodeService>()
+                  .Setup(s => s.FindEpisode(_series.Id, 1179))
+                  .Returns(episode);
+
+            var episodes = Subject.GetEpisodes(_parsedEpisodeInfo, _series, true, null);
+
+            episodes.Should().HaveCount(1);
+            episodes.First().Id.Should().Be(episode.Id);
+        }
+
+        [Test]
+        public void should_not_match_absolute_episode_number_for_standard_series_without_absolute_numbers()
+        {
+            _series.SeriesType = SeriesTypes.Standard;
+
+            _parsedEpisodeInfo.SeasonNumber = 0;
+            _parsedEpisodeInfo.EpisodeNumbers = Array.Empty<int>();
+            _parsedEpisodeInfo.AbsoluteEpisodeNumbers = new[] { 1179 };
+
+            Mocker.GetMock<IEpisodeService>()
+                  .Setup(s => s.FindEpisodesBySceneNumbering(It.IsAny<int>(), It.IsAny<int>()))
+                  .Returns(new List<Episode>());
+
+            Mocker.GetMock<IEpisodeService>()
+                  .Setup(s => s.FindEpisode(It.IsAny<int>(), It.IsAny<int>()))
+                  .Returns((Episode)null);
+
+            var episodes = Subject.GetEpisodes(_parsedEpisodeInfo, _series, true, null);
+
+            episodes.Should().BeEmpty();
+        }
+
+        [Test]
         public void should_use_scene_numbering_when_series_uses_scene_numbering()
         {
             GivenSceneNumberingSeries();
