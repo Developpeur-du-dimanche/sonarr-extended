@@ -1,7 +1,8 @@
 import React, { useCallback, useRef, useState } from 'react';
-import PageContent from 'Components/Page/PageContent';
 import PageContentBody from 'Components/Page/PageContentBody';
-import SettingsToolbar from 'Settings/SettingsToolbar';
+import PageHeading from 'Components/Page/PageHeading';
+import settingsStyles from 'Settings/Settings.module.css';
+import SettingsPage from 'Settings/SettingsPage';
 import {
   SaveCallback,
   SettingsStateChange,
@@ -33,22 +34,27 @@ function MetadataSourceSettings() {
   }, []);
 
   return (
-    <PageContent title={translate('MetadataSourceSettings')}>
-      <SettingsToolbar
-        isSaving={isSaving}
-        hasPendingChanges={hasPendingChanges}
-        onSavePress={handleSavePress}
-      />
-
+    <SettingsPage
+      title={translate('MetadataSourceSettings')}
+      isSaving={isSaving}
+      hasPendingChanges={hasPendingChanges}
+      onSavePress={handleSavePress}
+    >
       <PageContentBody>
-        <TheTvdb />
+        <div className={settingsStyles.section}>
+          <PageHeading
+            scope={translate('Settings')}
+            title={translate('MetadataSource')}
+          />
+          <TheTvdb />
 
-        <Tmdb
-          setChildSave={handleSetChildSave}
-          onChildStateChange={handleChildStateChange}
-        />
+          <Tmdb
+            setChildSave={handleSetChildSave}
+            onChildStateChange={handleChildStateChange}
+          />
+        </div>
       </PageContentBody>
-    </PageContent>
+    </SettingsPage>
   );
 }
 

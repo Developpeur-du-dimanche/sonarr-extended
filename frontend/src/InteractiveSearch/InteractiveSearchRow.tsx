@@ -24,7 +24,7 @@ import OverrideMatchModal from './OverrideMatch/OverrideMatchModal';
 import Peers from './Peers';
 import ReleaseSceneIndicator from './ReleaseSceneIndicator';
 import { Release, useGrabRelease } from './useReleases';
-import styles from './InteractiveSearchRow.css';
+import styles from './InteractiveSearchRow.module.css';
 
 function getDownloadIcon(
   isGrabbing: boolean,
@@ -238,7 +238,7 @@ function InteractiveSearchRow(props: InteractiveSearchRowProps) {
 
         {isBlocklisted ? (
           <Icon
-            containerClassName={
+            titleWrapperClassName={
               history ? styles.blocklistIconContainer : undefined
             }
             name={icons.BLOCKLIST}

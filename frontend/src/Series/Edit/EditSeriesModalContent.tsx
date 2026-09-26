@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import SeriesMonitorNewItemsOptionsPopoverContent from 'AddSeries/SeriesMonitorNewItemsOptionsPopoverContent';
 import Form from 'Components/Form/Form';
-import FormGroup from 'Components/Form/FormGroup';
+import FormInput from 'Components/Form/FormInput';
 import FormInputButton from 'Components/Form/FormInputButton';
-import FormInputGroup from 'Components/Form/FormInputGroup';
+import FormInputHelpText from 'Components/Form/FormInputHelpText';
 import FormLabel from 'Components/Form/FormLabel';
+import FormRow from 'Components/Form/FormRow';
 import { EnhancedSelectInputValue } from 'Components/Form/Select/EnhancedSelectInput';
 import Icon from 'Components/Icon';
 import Button from 'Components/Link/Button';
@@ -33,7 +34,7 @@ import selectSettings from 'Utilities/selectSettings';
 import translate from 'Utilities/String/translate';
 import RootFolderModal from './RootFolder/RootFolderModal';
 import { RootFolderUpdated } from './RootFolder/RootFolderModalContent';
-import styles from './EditSeriesModalContent.css';
+import styles from './EditSeriesModalContent.module.css';
 
 export interface EditSeriesModalContentProps {
   seriesId: number;
@@ -229,19 +230,19 @@ function EditSeriesModalContent({
 
       <ModalBody>
         <Form {...otherSettings}>
-          <FormGroup size={sizes.MEDIUM}>
+          <FormRow size={sizes.MEDIUM}>
             <FormLabel>{translate('Monitored')}</FormLabel>
 
-            <FormInputGroup
+            <FormInputHelpText text={translate('MonitoredEpisodesHelpText')} />
+            <FormInput
               type={inputTypes.CHECK}
               name="monitored"
-              helpText={translate('MonitoredEpisodesHelpText')}
               {...settings.monitored}
               onChange={handleInputChange}
             />
-          </FormGroup>
+          </FormRow>
 
-          <FormGroup size={sizes.MEDIUM}>
+          <FormRow size={sizes.MEDIUM}>
             <FormLabel>
               {translate('MonitorNewSeasons')}
               <Popover
@@ -252,101 +253,104 @@ function EditSeriesModalContent({
               />
             </FormLabel>
 
-            <FormInputGroup
+            <FormInputHelpText text={translate('MonitorNewSeasonsHelpText')} />
+            <FormInput
               type={inputTypes.MONITOR_NEW_ITEMS_SELECT}
               name="monitorNewItems"
-              helpText={translate('MonitorNewSeasonsHelpText')}
               {...settings.monitorNewItems}
               onChange={handleInputChange}
             />
-          </FormGroup>
+          </FormRow>
 
-          <FormGroup size={sizes.MEDIUM}>
+          <FormRow size={sizes.MEDIUM}>
             <FormLabel>{translate('UseSeasonFolder')}</FormLabel>
 
-            <FormInputGroup
+            <FormInputHelpText text={translate('UseSeasonFolderHelpText')} />
+            <FormInput
               type={inputTypes.CHECK}
               name="seasonFolder"
-              helpText={translate('UseSeasonFolderHelpText')}
               {...settings.seasonFolder}
               onChange={handleInputChange}
             />
-          </FormGroup>
+          </FormRow>
 
-          <FormGroup size={sizes.MEDIUM}>
+          <FormRow size={sizes.MEDIUM}>
             <FormLabel>{translate('QualityProfile')}</FormLabel>
 
-            <FormInputGroup
+            <FormInput
               type={inputTypes.QUALITY_PROFILE_SELECT}
               name="qualityProfileId"
               {...settings.qualityProfileId}
               onChange={handleInputChange}
             />
-          </FormGroup>
+          </FormRow>
 
-          <FormGroup size={sizes.MEDIUM}>
+          <FormRow size={sizes.MEDIUM}>
             <FormLabel>{translate('SeriesType')}</FormLabel>
 
-            <FormInputGroup
+            <FormInputHelpText text={translate('SeriesTypesHelpText')} />
+            <FormInput
               type={inputTypes.SERIES_TYPE_SELECT}
               name="seriesType"
               {...settings.seriesType}
-              helpText={translate('SeriesTypesHelpText')}
               onChange={handleInputChange}
             />
-          </FormGroup>
+          </FormRow>
 
           {isAnime ? null : (
-            <FormGroup size={sizes.MEDIUM}>
+            <FormRow size={sizes.MEDIUM}>
               <FormLabel>{translate('SearchByAbsoluteNumber')}</FormLabel>
 
-              <FormInputGroup
+              <FormInputHelpText
+                text={translate('SearchByAbsoluteNumberHelpText')}
+              />
+              <FormInput
                 type={inputTypes.CHECK}
                 name="searchByAbsoluteNumber"
-                helpText={translate('SearchByAbsoluteNumberHelpText')}
                 {...settings.searchByAbsoluteNumber}
                 onChange={handleInputChange}
               />
-            </FormGroup>
+            </FormRow>
           )}
 
-          <FormGroup size={sizes.MEDIUM}>
+          <FormRow size={sizes.MEDIUM}>
             <FormLabel>{translate('EpisodeOrder')}</FormLabel>
 
-            <FormInputGroup
+            <FormInputHelpText text={translate('EpisodeOrderHelpText')} />
+            <FormInput
               type={inputTypes.SELECT}
               name="episodeOrder"
               values={episodeOrderOptions}
               {...settings.episodeOrder}
-              helpText={translate('EpisodeOrderHelpText')}
               onChange={handleInputChange}
             />
-          </FormGroup>
+          </FormRow>
 
           {isTmdbOrder ? (
-            <FormGroup size={sizes.MEDIUM}>
+            <FormRow size={sizes.MEDIUM}>
               <FormLabel>{translate('TmdbEpisodeGroup')}</FormLabel>
 
-              <FormInputGroup
+              <FormInputHelpText text={translate('TmdbEpisodeGroupHelpText')} />
+              {episodeGroupsError ? (
+                <FormInputHelpText
+                  text={translate('TmdbEpisodeGroupsLoadError')}
+                  isWarning={true}
+                />
+              ) : null}
+              <FormInput
                 type={inputTypes.SELECT}
                 name="tmdbEpisodeGroupId"
                 values={episodeGroupOptions}
                 {...settings.tmdbEpisodeGroupId}
-                helpText={translate('TmdbEpisodeGroupHelpText')}
-                helpTextWarning={
-                  episodeGroupsError
-                    ? translate('TmdbEpisodeGroupsLoadError')
-                    : undefined
-                }
                 onChange={handleInputChange}
               />
-            </FormGroup>
+            </FormRow>
           ) : null}
 
-          <FormGroup size={sizes.MEDIUM}>
+          <FormRow size={sizes.MEDIUM}>
             <FormLabel>{translate('Path')}</FormLabel>
 
-            <FormInputGroup
+            <FormInput
               type={inputTypes.PATH}
               name="path"
               {...settings.path}
@@ -363,18 +367,18 @@ function EditSeriesModalContent({
               includeFiles={false}
               onChange={handleInputChange}
             />
-          </FormGroup>
+          </FormRow>
 
-          <FormGroup size={sizes.MEDIUM}>
+          <FormRow size={sizes.MEDIUM}>
             <FormLabel>{translate('Tags')}</FormLabel>
 
-            <FormInputGroup
+            <FormInput
               type={inputTypes.TAG}
               name="tags"
               {...settings.tags}
               onChange={handleInputChange}
             />
-          </FormGroup>
+          </FormRow>
         </Form>
       </ModalBody>
 

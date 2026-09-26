@@ -2,7 +2,7 @@ import React from 'react';
 import formatSeason from 'Season/formatSeason';
 import { AlternateTitle, SeriesAlias } from 'Series/Series';
 import translate from 'Utilities/String/translate';
-import styles from './SeriesAlternateTitles.css';
+import styles from './SeriesAlternateTitles.module.css';
 
 function getAliasSeasonInfo({ seasonNumber, sceneSeasonNumber }: SeriesAlias) {
   if (seasonNumber === null || seasonNumber === undefined) {

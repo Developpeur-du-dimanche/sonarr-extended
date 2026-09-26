@@ -2,7 +2,7 @@ import React from 'react';
 import TableRowCell from 'Components/Table/Cells/TableRowCell';
 import TableRow from 'Components/Table/TableRow';
 import translate from 'Utilities/String/translate';
-import styles from './SeriesAlternateTitleRow.css';
+import styles from './SeriesAlternateTitleRow.module.css';
 
 interface SeriesAlternateTitleRowProps {
   title: string;
