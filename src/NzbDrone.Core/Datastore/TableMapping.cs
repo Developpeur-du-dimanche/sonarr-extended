@@ -40,6 +40,7 @@ using NzbDrone.Core.RootFolders;
 using NzbDrone.Core.Tags;
 using NzbDrone.Core.ThingiProvider;
 using NzbDrone.Core.Tv;
+using NzbDrone.Core.Tv.Aliases;
 using NzbDrone.Core.Update.History;
 using static Dapper.SqlMapper;
 
@@ -111,6 +112,8 @@ namespace NzbDrone.Core.Datastore
                   .Ignore(d => d.Protocol);
 
             Mapper.Entity<SceneMapping>("SceneMappings").RegisterModel();
+
+            Mapper.Entity<SeriesAlias>("SeriesAliases").RegisterModel();
 
             Mapper.Entity<EpisodeHistory>("History").RegisterModel();
 

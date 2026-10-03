@@ -13,7 +13,7 @@ namespace NzbDrone.Core.Notifications.Gotify
 {
     public class Gotify : NotificationBase<GotifySettings>
     {
-        private const string SonarrImageUrl = "https://raw.githubusercontent.com/Sonarr/Sonarr/develop/Logo/128.png";
+        private const string SonarrImageUrl = "https://raw.githubusercontent.com/Developpeur-du-dimanche/sonarr-extended/v5-develop/Logo/128.png";
 
         private readonly IGotifyProxy _proxy;
         private readonly ILocalizationService _localizationService;
@@ -110,8 +110,8 @@ namespace NzbDrone.Core.Notifications.Gotify
                     isMarkdown = true;
 
                     sb.AppendLine("");
-                    sb.AppendLine("[Sonarr.tv](https://sonarr.tv)");
-                    payload.SetClickUrl("https://sonarr.tv");
+                    sb.AppendLine("[Sonarr Extended](https://github.com/Developpeur-du-dimanche/sonarr-extended)");
+                    payload.SetClickUrl("https://github.com/Developpeur-du-dimanche/sonarr-extended");
                 }
 
                 payload.Message = sb.ToString();

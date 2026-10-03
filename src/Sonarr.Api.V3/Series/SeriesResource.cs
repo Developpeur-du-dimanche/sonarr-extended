@@ -43,10 +43,13 @@ namespace Sonarr.Api.V3.Series
 
         // Editing Only
         public bool SeasonFolder { get; set; }
+        public bool SearchByAbsoluteNumber { get; set; }
         public bool Monitored { get; set; }
         public NewItemMonitorTypes MonitorNewItems { get; set; }
 
         public bool UseSceneNumbering { get; set; }
+        public EpisodeOrderType EpisodeOrder { get; set; }
+        public string TmdbEpisodeGroupId { get; set; }
         public int Runtime { get; set; }
         public int TvdbId { get; set; }
         public int TvRageId { get; set; }
@@ -116,10 +119,13 @@ namespace Sonarr.Api.V3.Series
                        QualityProfileId = model.QualityProfileId,
 
                        SeasonFolder = model.SeasonFolder,
+                       SearchByAbsoluteNumber = model.SearchByAbsoluteNumber,
                        Monitored = model.Monitored,
                        MonitorNewItems = model.MonitorNewItems,
 
                        UseSceneNumbering = model.UseSceneNumbering,
+                       EpisodeOrder = model.EpisodeOrder,
+                       TmdbEpisodeGroupId = model.TmdbEpisodeGroupId,
                        Runtime = model.Runtime,
                        TvdbId = model.TvdbId,
                        TvRageId = model.TvRageId,
@@ -181,10 +187,13 @@ namespace Sonarr.Api.V3.Series
                        QualityProfileId = resource.QualityProfileId,
 
                        SeasonFolder = resource.SeasonFolder,
+                       SearchByAbsoluteNumber = resource.SearchByAbsoluteNumber,
                        Monitored = resource.Monitored,
                        MonitorNewItems = resource.MonitorNewItems,
 
                        UseSceneNumbering = resource.UseSceneNumbering,
+                       EpisodeOrder = resource.EpisodeOrder,
+                       TmdbEpisodeGroupId = resource.TmdbEpisodeGroupId.IsNullOrWhiteSpace() ? null : resource.TmdbEpisodeGroupId,
                        Runtime = resource.Runtime,
                        TvdbId = resource.TvdbId,
                        TvRageId = resource.TvRageId,

@@ -1,0 +1,71 @@
+name: 'Sync Upstream'
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *'
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    if: github.repository == 'Developpeur-du-dimanche/sonarr-extended'
+    permissions:
+      contents: write
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        branch:
+          - develop
+          - v5-develop
+    env:
+      # A PAT with the "workflow" scope is needed when upstream changes files in .github/workflows,
+      # and lets the created PRs trigger the other workflows (PRs opened with GITHUB_TOKEN do not).
+      GH_TOKEN: ${{ secrets.SYNC_PAT || github.token }}
+      UPSTREAM_REPO: https://github.com/Sonarr/Sonarr.git
+      BRANCH: ${{ matrix.branch }}
+      SYNC_BRANCH: sync/upstream-${{ matrix.branch }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.SYNC_PAT || github.token }}
+
+      - name: Fetch upstream
+        run: git fetch --no-tags "$UPSTREAM_REPO" "refs/heads/$BRANCH:refs/remotes/upstream/$BRANCH"
+
+      - name: Push sync branch
+        id: push
+        run: |
+          if git merge-base --is-ancestor "upstream/$BRANCH" "origin/$BRANCH"
+          then
+            echo "origin/$BRANCH is already up to date with upstream"
+            echo "changes=false" >> "$GITHUB_OUTPUT"
+          else
+            git push --force origin "refs/remotes/upstream/$BRANCH:refs/heads/$SYNC_BRANCH"
+            echo "changes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create pull request
+        if: steps.push.outputs.changes == 'true'
+        run: |
+          existing=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$SYNC_BRANCH" --base "$BRANCH" --state open --json number --jq 'length')
+
+          if [ "$existing" != "0" ]
+          then
+            echo "Pull request already open, it has been updated by the push"
+            exit 0
+          fi
+
+          commits=$(git log --oneline --no-merges "origin/$BRANCH..upstream/$BRANCH" | head -n 50)
+
+          gh pr create \
+            --repo "$GITHUB_REPOSITORY" \
+            --head "$SYNC_BRANCH" \
+            --base "$BRANCH" \
+            --title "Sync upstream $BRANCH" \
+            --body "$(printf 'Synchronizes `%s` with [Sonarr/Sonarr@%s](https://github.com/Sonarr/Sonarr/tree/%s).\n\nMerge with a merge commit (not squash) so the next sync detects that these commits are already included.\n\n```\n%s\n```' "$BRANCH" "$BRANCH" "$BRANCH" "$commits")"

@@ -17,7 +17,9 @@ namespace NzbDrone.Core.Tv
 
         public void Handle(SeriesEditedEvent message)
         {
-            if (message.Series.SeriesType != message.OldSeries.SeriesType)
+            if (message.Series.SeriesType != message.OldSeries.SeriesType ||
+                message.Series.EpisodeOrder != message.OldSeries.EpisodeOrder ||
+                message.Series.TmdbEpisodeGroupId != message.OldSeries.TmdbEpisodeGroupId)
             {
                 _commandQueueManager.Push(new RefreshSeriesCommand(new List<int> { message.Series.Id }, false));
             }

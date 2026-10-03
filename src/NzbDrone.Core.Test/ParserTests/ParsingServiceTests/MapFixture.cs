@@ -295,6 +295,48 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
         }
 
         [Test]
+        public void should_map_release_season_to_series_season_for_series_alias_with_release_season()
+        {
+            _parsedEpisodeInfo.SeasonNumber = 1;
+
+            var sceneMapping = new SceneMapping
+            {
+                Type = SceneMapping.SeriesAliasType,
+                SeasonNumber = 4,
+                SceneSeasonNumber = 1
+            };
+
+            Mocker.GetMock<ISceneMappingService>()
+                .Setup(s => s.FindSceneMapping(_parsedEpisodeInfo.SeriesTitle, _parsedEpisodeInfo.ReleaseTitle, _parsedEpisodeInfo.SeasonNumber.Value))
+                .Returns(sceneMapping);
+
+            var result = Subject.Map(_parsedEpisodeInfo, _series);
+
+            result.MappedSeasonNumber.Should().Be(4);
+        }
+
+        [Test]
+        public void should_not_change_season_for_series_alias_restricted_to_a_season()
+        {
+            _parsedEpisodeInfo.SeasonNumber = 4;
+
+            var sceneMapping = new SceneMapping
+            {
+                Type = SceneMapping.SeriesAliasType,
+                SeasonNumber = 4,
+                SceneSeasonNumber = null
+            };
+
+            Mocker.GetMock<ISceneMappingService>()
+                .Setup(s => s.FindSceneMapping(_parsedEpisodeInfo.SeriesTitle, _parsedEpisodeInfo.ReleaseTitle, _parsedEpisodeInfo.SeasonNumber.Value))
+                .Returns(sceneMapping);
+
+            var result = Subject.Map(_parsedEpisodeInfo, _series);
+
+            result.MappedSeasonNumber.Should().Be(4);
+        }
+
+        [Test]
         public void should_use_tvdbid_matching_when_alias_without_year_is_found()
         {
             var alias = "Series Alias";

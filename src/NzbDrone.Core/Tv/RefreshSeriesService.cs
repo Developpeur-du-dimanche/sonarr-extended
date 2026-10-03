@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using NLog;
@@ -12,6 +13,7 @@ using NzbDrone.Core.MediaFiles.Events;
 using NzbDrone.Core.Messaging.Commands;
 using NzbDrone.Core.Messaging.Events;
 using NzbDrone.Core.MetadataSource;
+using NzbDrone.Core.MetadataSource.Tmdb;
 using NzbDrone.Core.Tv.Commands;
 using NzbDrone.Core.Tv.Events;
 
@@ -20,6 +22,7 @@ namespace NzbDrone.Core.Tv
     public class RefreshSeriesService : IExecute<RefreshSeriesCommand>
     {
         private readonly IProvideSeriesInfo _seriesInfo;
+        private readonly ITmdbProxy _tmdbProxy;
         private readonly ISeriesService _seriesService;
         private readonly IRefreshEpisodeService _refreshEpisodeService;
         private readonly IEventAggregator _eventAggregator;
@@ -30,6 +33,7 @@ namespace NzbDrone.Core.Tv
         private readonly Logger _logger;
 
         public RefreshSeriesService(IProvideSeriesInfo seriesInfo,
+                                    ITmdbProxy tmdbProxy,
                                     ISeriesService seriesService,
                                     IRefreshEpisodeService refreshEpisodeService,
                                     IEventAggregator eventAggregator,
@@ -40,6 +44,7 @@ namespace NzbDrone.Core.Tv
                                     Logger logger)
         {
             _seriesInfo = seriesInfo;
+            _tmdbProxy = tmdbProxy;
             _seriesService = seriesService;
             _refreshEpisodeService = refreshEpisodeService;
             _eventAggregator = eventAggregator;
@@ -123,6 +128,24 @@ namespace NzbDrone.Core.Tv
                 _logger.Warn(e, "Couldn't update series path for " + series.Path);
             }
 
+            if (series.EpisodeOrder == EpisodeOrderType.Tmdb)
+            {
+                episodes = GetTmdbEpisodes(series, episodes);
+
+                if (episodes == null)
+                {
+                    // Keep the existing seasons and episodes rather than switching back to TheTVDB order
+                    _seriesService.UpdateSeries(series, publishUpdatedEvent: false);
+
+                    _logger.Debug("Finished series refresh for {0} without updating episodes", series.Title);
+                    _eventAggregator.PublishEvent(new SeriesUpdatedEvent(series));
+
+                    return series;
+                }
+
+                seriesInfo.Seasons = GetTmdbSeasons(seriesInfo, episodes);
+            }
+
             series.Seasons = UpdateSeasons(series, seriesInfo);
 
             _seriesService.UpdateSeries(series, publishUpdatedEvent: false);
@@ -132,6 +155,72 @@ namespace NzbDrone.Core.Tv
             _eventAggregator.PublishEvent(new SeriesUpdatedEvent(series));
 
             return series;
+        }
+
+        private List<Episode> GetTmdbEpisodes(Series series, List<Episode> tvdbEpisodes)
+        {
+            if (series.TmdbId <= 0)
+            {
+                _logger.Warn("Series {0} is set to use TMDB episode order but has no TMDB ID, episodes will not be updated", series.Title);
+                return null;
+            }
+
+            if (!_tmdbProxy.IsConfigured)
+            {
+                _logger.Warn("Series {0} is set to use TMDB episode order but no TMDB API key is configured, episodes will not be updated", series.Title);
+                return null;
+            }
+
+            var episodes = _tmdbProxy.GetEpisodes(series.TmdbId, series.TmdbEpisodeGroupId);
+
+            // TMDB only provides air dates, apply the series' air time from TheTVDB to get a UTC air date
+            var airTimeOffset = GetAirTimeOffset(tvdbEpisodes);
+
+            foreach (var episode in episodes)
+            {
+                if (TryParseAirDate(episode.AirDate, out var airDate))
+                {
+                    episode.AirDateUtc = airDate.Add(airTimeOffset);
+                }
+            }
+
+            return episodes;
+        }
+
+        private static TimeSpan GetAirTimeOffset(List<Episode> tvdbEpisodes)
+        {
+            foreach (var episode in tvdbEpisodes.Where(e => e.AirDateUtc.HasValue).OrderByDescending(e => e.AirDateUtc))
+            {
+                if (TryParseAirDate(episode.AirDate, out var airDate))
+                {
+                    return episode.AirDateUtc.Value - airDate;
+                }
+            }
+
+            return TimeSpan.Zero;
+        }
+
+        private static bool TryParseAirDate(string airDate, out DateTime result)
+        {
+            return DateTime.TryParseExact(airDate,
+                Episode.AIR_DATE_FORMAT,
+                DateTimeFormatInfo.InvariantInfo,
+                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+                out result);
+        }
+
+        private static List<Season> GetTmdbSeasons(Series seriesInfo, List<Episode> episodes)
+        {
+            return episodes.Select(e => e.SeasonNumber)
+                .Distinct()
+                .OrderBy(n => n)
+                .Select(n => new Season
+                {
+                    SeasonNumber = n,
+                    Images = seriesInfo.Seasons.FirstOrDefault(s => s.SeasonNumber == n)?.Images ?? new List<MediaCover.MediaCover>(),
+                    Monitored = n > 0
+                })
+                .ToList();
         }
 
         private List<Season> UpdateSeasons(Series series, Series seriesInfo)

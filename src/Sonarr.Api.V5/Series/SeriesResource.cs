@@ -12,6 +12,7 @@ public class SeriesResource : RestResource
 {
     public string? Title { get; set; }
     public List<AlternateTitleResource>? AlternateTitles { get; set; }
+    public List<SeriesAliasResource>? Aliases { get; set; }
     public string? SortTitle { get; set; }
     public SeriesStatusType Status { get; set; }
     public bool Ended => Status == SeriesStatusType.Ended;
@@ -29,9 +30,12 @@ public class SeriesResource : RestResource
     public string? Path { get; set; }
     public int QualityProfileId { get; set; }
     public bool SeasonFolder { get; set; }
+    public bool SearchByAbsoluteNumber { get; set; }
     public bool Monitored { get; set; }
     public NewItemMonitorTypes MonitorNewItems { get; set; }
     public bool UseSceneNumbering { get; set; }
+    public EpisodeOrderType EpisodeOrder { get; set; }
+    public string? TmdbEpisodeGroupId { get; set; }
     public int Runtime { get; set; }
     public int TvdbId { get; set; }
     public int TvRageId { get; set; }
@@ -82,9 +86,12 @@ public static class SeriesResourceMapper
             Path = model.Path,
             QualityProfileId = model.QualityProfileId,
             SeasonFolder = model.SeasonFolder,
+            SearchByAbsoluteNumber = model.SearchByAbsoluteNumber,
             Monitored = model.Monitored,
             MonitorNewItems = model.MonitorNewItems,
             UseSceneNumbering = model.UseSceneNumbering,
+            EpisodeOrder = model.EpisodeOrder,
+            TmdbEpisodeGroupId = model.TmdbEpisodeGroupId,
             Runtime = model.Runtime,
             TvdbId = model.TvdbId,
             TvRageId = model.TvRageId,
@@ -125,9 +132,12 @@ public static class SeriesResourceMapper
             Path = resource.Path,
             QualityProfileId = resource.QualityProfileId,
             SeasonFolder = resource.SeasonFolder,
+            SearchByAbsoluteNumber = resource.SearchByAbsoluteNumber,
             Monitored = resource.Monitored,
             MonitorNewItems = resource.MonitorNewItems,
             UseSceneNumbering = resource.UseSceneNumbering,
+            EpisodeOrder = resource.EpisodeOrder,
+            TmdbEpisodeGroupId = resource.TmdbEpisodeGroupId.IsNullOrWhiteSpace() ? null : resource.TmdbEpisodeGroupId,
             Runtime = resource.Runtime,
             TvdbId = resource.TvdbId,
             TvRageId = resource.TvRageId,
