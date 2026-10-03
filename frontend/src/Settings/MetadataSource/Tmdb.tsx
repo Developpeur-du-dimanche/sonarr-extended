@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect } from 'react';
 import Alert from 'Components/Alert';
 import FieldSet from 'Components/FieldSet';
-import Form from 'Components/Form/Form';
-import FormGroup from 'Components/Form/FormGroup';
-import FormInputGroup from 'Components/Form/FormInputGroup';
+import FormInput from 'Components/Form/FormInput';
+import FormInputHelpText from 'Components/Form/FormInputHelpText';
 import FormLabel from 'Components/Form/FormLabel';
+import FormRow from 'Components/Form/FormRow';
 import LoadingIndicator from 'Components/Loading/LoadingIndicator';
 import { inputTypes, kinds } from 'Helpers/Props';
 import { InputChanged } from 'typings/inputs';
@@ -34,8 +34,9 @@ function Tmdb({ setChildSave, onChildStateChange }: TmdbProps) {
   } = useManageMetadataSourceSettings();
 
   const handleInputChange = useCallback(
-    ({ value }: InputChanged<string>) => {
-      updateSetting('tmdbApiKey', value);
+    (change: InputChanged) => {
+      // @ts-expect-error input change events aren't typed
+      updateSetting('tmdbApiKey', change.value);
     },
     [updateSetting]
   );
@@ -62,19 +63,16 @@ function Tmdb({ setChildSave, onChildStateChange }: TmdbProps) {
       ) : null}
 
       {hasSettings && isFetched && !error ? (
-        <Form>
-          <FormGroup>
-            <FormLabel>{translate('TmdbApiKey')}</FormLabel>
-
-            <FormInputGroup
-              type={inputTypes.PASSWORD}
-              name="tmdbApiKey"
-              helpText={translate('TmdbApiKeyHelpText')}
-              {...settings.tmdbApiKey}
-              onChange={handleInputChange}
-            />
-          </FormGroup>
-        </Form>
+        <FormRow>
+          <FormLabel>{translate('TmdbApiKey')}</FormLabel>
+          <FormInputHelpText text={translate('TmdbApiKeyHelpText')} />
+          <FormInput
+            type={inputTypes.PASSWORD}
+            name="tmdbApiKey"
+            {...settings.tmdbApiKey}
+            onChange={handleInputChange}
+          />
+        </FormRow>
       ) : null}
     </FieldSet>
   );
