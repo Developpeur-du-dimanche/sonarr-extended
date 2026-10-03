@@ -5089,6 +5089,97 @@
         }
       }
     },
+    "/api/v5/settings/metadatasource": {
+      "get": {
+        "tags": [
+          "MetadataSourceSettings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetadataSourceSettingsResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v5/settings/metadatasource/{id}": {
+      "put": {
+        "tags": [
+          "MetadataSourceSettings"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MetadataSourceSettingsResource"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetadataSourceSettingsResource"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "MetadataSourceSettings"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetadataSourceSettingsResource"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/api/v5/wanted/missing": {
       "get": {
         "tags": [
@@ -7758,6 +7849,38 @@
         }
       }
     },
+    "/api/v5/tmdb/episodegroup": {
+      "get": {
+        "tags": [
+          "TmdbEpisodeGroup"
+        ],
+        "parameters": [
+          {
+            "name": "tmdbId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TmdbEpisodeGroupResource"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v5/settings/ui": {
       "get": {
         "tags": [
@@ -9255,6 +9378,13 @@
           "episodeFileDeleted",
           "episodeFileRenamed",
           "downloadIgnored"
+        ],
+        "type": "string"
+      },
+      "EpisodeOrderType": {
+        "enum": [
+          "tvdb",
+          "tmdb"
         ],
         "type": "string"
       },
@@ -11130,6 +11260,20 @@
         },
         "additionalProperties": false
       },
+      "MetadataSourceSettingsResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tmdbApiKey": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "MissingSubresource": {
         "enum": [
           "series",
@@ -12878,6 +13022,26 @@
         },
         "additionalProperties": false
       },
+      "SeriesAliasResource": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "seasonNumber": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "sceneSeasonNumber": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "SeriesEditorResource": {
         "type": "object",
         "properties": {
@@ -12963,6 +13127,13 @@
             },
             "nullable": true
           },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SeriesAliasResource"
+            },
+            "nullable": true
+          },
           "sortTitle": {
             "type": "string",
             "nullable": true
@@ -13036,6 +13207,9 @@
           "seasonFolder": {
             "type": "boolean"
           },
+          "searchByAbsoluteNumber": {
+            "type": "boolean"
+          },
           "monitored": {
             "type": "boolean"
           },
@@ -13044,6 +13218,13 @@
           },
           "useSceneNumbering": {
             "type": "boolean"
+          },
+          "episodeOrder": {
+            "$ref": "#/components/schemas/EpisodeOrderType"
+          },
+          "tmdbEpisodeGroupId": {
+            "type": "string",
+            "nullable": true
           },
           "runtime": {
             "type": "integer",
@@ -13719,6 +13900,47 @@
         },
         "additionalProperties": false
       },
+      "TmdbEpisodeGroupResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "$ref": "#/components/schemas/TmdbEpisodeGroupType"
+          },
+          "episodeCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "groupCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TmdbEpisodeGroupType": {
+        "enum": [
+          "originalAirDate",
+          "absolute",
+          "dvd",
+          "digital",
+          "storyArc",
+          "production",
+          "tv"
+        ],
+        "type": "string"
+      },
       "TrackedDownloadState": {
         "enum": [
           "downloading",
@@ -14113,6 +14335,9 @@
       "name": "Metadata"
     },
     {
+      "name": "MetadataSourceSettings"
+    },
+    {
       "name": "Missing"
     },
     {
@@ -14195,6 +14420,9 @@
     },
     {
       "name": "Task"
+    },
+    {
+      "name": "TmdbEpisodeGroup"
     },
     {
       "name": "UiSettings"
