@@ -264,8 +264,8 @@ function Updates() {
               <div>
                 <InlineMarkdown
                   data={translate('InstallMajorVersionUpdateMessageLink', {
-                    domain: 'sonarr.tv',
-                    url: 'https://sonarr.tv/#downloads',
+                    domain: 'github.com',
+                    url: 'https://github.com/Developpeur-du-dimanche/sonarr-extended/releases',
                   })}
                 />
               </div>

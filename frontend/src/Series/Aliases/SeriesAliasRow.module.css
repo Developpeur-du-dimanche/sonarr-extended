@@ -1,0 +1,23 @@
+.season {
+  composes: cell from 'Components/Table/Cells/TableRowCell.module.css';
+
+  width: 160px;
+}
+
+.releaseSeason {
+  composes: cell from 'Components/Table/Cells/TableRowCell.module.css';
+
+  width: 110px;
+}
+
+.source {
+  composes: cell from 'Components/Table/Cells/TableRowCell.module.css';
+
+  width: 110px;
+}
+
+.actions {
+  composes: cell from 'Components/Table/Cells/TableRowCell.module.css';
+
+  width: 45px;
+}
