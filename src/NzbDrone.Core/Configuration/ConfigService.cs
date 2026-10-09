@@ -388,6 +388,13 @@ namespace NzbDrone.Core.Configuration
             set { SetValue("UILanguage", value); }
         }
 
+        public int PreferredMetadataLanguage
+        {
+            get { return GetValueInt("PreferredMetadataLanguage", (int)Language.English); }
+
+            set { SetValue("PreferredMetadataLanguage", value); }
+        }
+
         public bool CleanupMetadataImages
         {
             get { return GetValueBoolean("CleanupMetadataImages", true); }

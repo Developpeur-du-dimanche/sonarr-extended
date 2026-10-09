@@ -37,9 +37,9 @@ namespace NzbDrone.Core.DataAugmentation.Xem
 
             try
             {
-                // XEM mappings are based on TheTVDB numbering, they don't apply when episodes use another order.
+                // XEM mappings are based on TheTVDB official aired order, they don't apply when episodes use another order.
                 // An empty list clears any scene numbering previously set on the series.
-                var mappings = series.EpisodeOrder == EpisodeOrderType.Tvdb
+                var mappings = series.EpisodeOrder == EpisodeOrderType.Tvdb && series.SeasonType == SeasonType.Official
                     ? _xemProxy.GetSceneTvdbMappings(series.TvdbId)
                     : new List<Model.XemSceneTvdbMapping>();
 

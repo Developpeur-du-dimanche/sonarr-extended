@@ -1,43 +1,64 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback } from 'react';
+import Alert from 'Components/Alert';
+import FieldSet from 'Components/FieldSet';
+import Form from 'Components/Form/Form';
+import FormInput from 'Components/Form/FormInput';
+import FormInputHelpText from 'Components/Form/FormInputHelpText';
+import FormLabel from 'Components/Form/FormLabel';
+import FormRow from 'Components/Form/FormRow';
+import { LanguageSelectInputOnChangeProps } from 'Components/Form/Select/LanguageSelectInput';
+import LoadingIndicator from 'Components/Loading/LoadingIndicator';
 import PageContentBody from 'Components/Page/PageContentBody';
 import PageHeading from 'Components/Page/PageHeading';
+import { inputTypes, kinds } from 'Helpers/Props';
 import settingsStyles from 'Settings/Settings.module.css';
 import SettingsPage from 'Settings/SettingsPage';
-import {
-  SaveCallback,
-  SettingsStateChange,
-} from 'typings/Settings/SettingsState';
+import { InputChanged } from 'typings/inputs';
 import translate from 'Utilities/String/translate';
 import TheTvdb from './TheTvdb';
-import Tmdb from './Tmdb';
+import {
+  MetadataSourceSettingsModel,
+  useManageMetadataSourceSettings,
+} from './useMetadataSourceSettings';
 
 function MetadataSourceSettings() {
-  const saveTmdb = useRef<() => void>();
+  const {
+    isFetching,
+    isFetched,
+    error,
+    hasPendingChanges,
+    hasSettings,
+    settings,
+    isSaving,
+    validationErrors,
+    validationWarnings,
+    saveSettings,
+    updateSetting,
+  } = useManageMetadataSourceSettings();
 
-  const [isSaving, setIsSaving] = useState(false);
-  const [hasPendingChanges, setHasPendingChanges] = useState(false);
-
-  const handleSetChildSave = useCallback((saveCallback: SaveCallback) => {
-    saveTmdb.current = saveCallback;
-  }, []);
-
-  const handleChildStateChange = useCallback(
-    ({ isSaving, hasPendingChanges }: SettingsStateChange) => {
-      setIsSaving(isSaving);
-      setHasPendingChanges(hasPendingChanges);
+  const handleInputChange = useCallback(
+    ({ name, value }: LanguageSelectInputOnChangeProps) => {
+      updateSetting(name as keyof MetadataSourceSettingsModel, value as number);
     },
-    []
+    [updateSetting]
+  );
+
+  const handleTmdbApiKeyChange = useCallback(
+    ({ value }: InputChanged<string>) => {
+      updateSetting('tmdbApiKey', value);
+    },
+    [updateSetting]
   );
 
   const handleSavePress = useCallback(() => {
-    saveTmdb.current?.();
-  }, []);
+    saveSettings();
+  }, [saveSettings]);
 
   return (
     <SettingsPage
       title={translate('MetadataSourceSettings')}
-      isSaving={isSaving}
       hasPendingChanges={hasPendingChanges}
+      isSaving={isSaving}
       onSavePress={handleSavePress}
     >
       <PageContentBody>
@@ -46,12 +67,59 @@ function MetadataSourceSettings() {
             scope={translate('Settings')}
             title={translate('MetadataSource')}
           />
-          <TheTvdb />
 
-          <Tmdb
-            setChildSave={handleSetChildSave}
-            onChildStateChange={handleChildStateChange}
-          />
+          {isFetching && !isFetched ? <LoadingIndicator /> : null}
+
+          {!isFetching && error ? (
+            <Alert kind={kinds.DANGER}>
+              {translate('MetadataSourceSettingsLoadError')}
+            </Alert>
+          ) : null}
+
+          {hasSettings && isFetched && !error ? (
+            <Form
+              id="metadataSourceSettings"
+              validationErrors={validationErrors}
+              validationWarnings={validationWarnings}
+            >
+              <FieldSet legend={translate('Options')}>
+                <FormRow>
+                  <FormLabel>
+                    {translate('PreferredMetadataLanguage')}
+                  </FormLabel>
+
+                  <FormInputHelpText
+                    text={translate('PreferredMetadataLanguageHelpText')}
+                  />
+                  <FormInput
+                    type={inputTypes.LANGUAGE_SELECT}
+                    name="preferredMetadataLanguage"
+                    includeAny={false}
+                    onChange={handleInputChange}
+                    {...settings.preferredMetadataLanguage}
+                  />
+                </FormRow>
+              </FieldSet>
+
+              <FieldSet legend={translate('TheMovieDb')}>
+                <FormRow>
+                  <FormLabel>{translate('TmdbApiKey')}</FormLabel>
+
+                  <FormInputHelpText text={translate('TmdbApiKeyHelpText')} />
+                  <FormInput
+                    type={inputTypes.PASSWORD}
+                    name="tmdbApiKey"
+                    {...settings.tmdbApiKey}
+                    onChange={handleTmdbApiKeyChange}
+                  />
+                </FormRow>
+              </FieldSet>
+            </Form>
+          ) : null}
+
+          <FieldSet legend={translate('Source')}>
+            <TheTvdb />
+          </FieldSet>
         </div>
       </PageContentBody>
     </SettingsPage>

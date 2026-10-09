@@ -43,6 +43,7 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
     private readonly IAddSeriesService _addSeriesService;
     private readonly ISeriesStatisticsService _seriesStatisticsService;
     private readonly ISceneMappingService _sceneMappingService;
+    private readonly ISeriesTranslationService _seriesTranslationService;
     private readonly ISeriesAliasService _seriesAliasService;
     private readonly IMapCoversToLocal _coverMapper;
     private readonly IManageCommandQueue _commandQueueManager;
@@ -55,6 +56,7 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
                         IAddSeriesService addSeriesService,
                         ISeriesStatisticsService seriesStatisticsService,
                         ISceneMappingService sceneMappingService,
+                        ISeriesTranslationService seriesTranslationService,
                         ISeriesAliasService seriesAliasService,
                         IMapCoversToLocal coverMapper,
                         IManageCommandQueue commandQueueManager,
@@ -74,6 +76,7 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
         _addSeriesService = addSeriesService;
         _seriesStatisticsService = seriesStatisticsService;
         _sceneMappingService = sceneMappingService;
+        _seriesTranslationService = seriesTranslationService;
         _seriesAliasService = seriesAliasService;
 
         _coverMapper = coverMapper;
@@ -107,6 +110,13 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
         SharedValidator.RuleFor(s => s.QualityProfileId).Cascade(CascadeMode.Stop)
             .ValidId()
             .SetValidator(qualityProfileExistsValidator);
+
+        SharedValidator.RuleFor(s => s.Language).Cascade(CascadeMode.Stop)
+            .NotNull()
+            .Must(l => IsoLanguages.Get(l!) != null)
+            .WithMessage("Invalid Language value");
+
+        SharedValidator.RuleFor(s => s.SeasonType).NotEmpty();
 
         PutValidator.RuleFor(s => s.Aliases).Custom((aliases, context) =>
         {
@@ -158,6 +168,7 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
         MapCoversToLocal(seriesResources.ToArray());
         LinkSeriesStatistics(seriesResources, seriesStats.ToDictionary(x => x.SeriesId));
         PopulateAlternateTitles(seriesResources);
+        PopulateTranslations(seriesResources);
         PopulateAliases(seriesResources);
         seriesResources.ForEach(LinkRootFolderPath);
 
@@ -243,6 +254,8 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
                 trigger: CommandTrigger.Manual);
         }
 
+        var seasonType = series.SeasonType;
+
         if (seriesResource.Aliases != null)
         {
             _seriesAliasService.SetAliases(series.Id, seriesResource.Aliases.Select(a => a.ToModel()));
@@ -250,9 +263,13 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
 
         var model = seriesResource.ToModel(series);
 
+        // Don't change the season type for an existing series
+        model.SeasonType = seasonType;
+
         _seriesService.UpdateSeries(model);
 
         PopulateAlternateTitles(seriesResource);
+        PopulateTranslations(seriesResource);
         PopulateAliases(seriesResource);
         BroadcastResourceChange(ModelAction.Updated, seriesResource);
 
@@ -303,6 +320,7 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
         MapCoversToLocal(resource);
         FetchAndLinkSeriesStatistics(resource);
         PopulateAlternateTitles(resource);
+        PopulateTranslations(resource);
         PopulateAliases(resource);
         LinkRootFolderPath(resource);
 
@@ -349,6 +367,32 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
                 season.Statistics = seriesStatistics.SeasonStatistics?.SingleOrDefault(s => s.SeasonNumber == season.SeasonNumber)?.ToResource();
             }
         }
+    }
+
+    private void PopulateTranslations(List<SeriesResource> resources)
+    {
+        var translations = _seriesTranslationService.GetTranslations()
+            .GroupBy(t => t.SeriesId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        foreach (var resource in resources)
+        {
+            if (translations.TryGetValue(resource.Id, out var seriesTranslations))
+            {
+                resource.Translations = seriesTranslations
+                    .Select(t => new SeriesTranslationResource
+                    {
+                        Language = t.Language,
+                        Title = t.Title
+                    })
+                    .ToList();
+            }
+        }
+    }
+
+    private void PopulateTranslations(SeriesResource resource)
+    {
+        resource.Translations = _seriesTranslationService.GetTranslations(resource.Id).ToResource();
     }
 
     private void PopulateAlternateTitles(List<SeriesResource> resources)

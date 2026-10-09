@@ -56,6 +56,7 @@ function EditSeriesModalContent({
     seasonFolder,
     qualityProfileId,
     seriesType,
+    language,
     searchByAbsoluteNumber,
     episodeOrder,
     tmdbEpisodeGroupId,
@@ -87,6 +88,7 @@ function EditSeriesModalContent({
         seasonFolder,
         qualityProfileId,
         seriesType,
+        language,
         searchByAbsoluteNumber,
         episodeOrder,
         tmdbEpisodeGroupId: tmdbEpisodeGroupId ?? '',
@@ -102,6 +104,7 @@ function EditSeriesModalContent({
     seasonFolder,
     qualityProfileId,
     seriesType,
+    language,
     searchByAbsoluteNumber,
     episodeOrder,
     tmdbEpisodeGroupId,
@@ -348,6 +351,18 @@ function EditSeriesModalContent({
           ) : null}
 
           <FormRow size={sizes.MEDIUM}>
+            <FormLabel>{translate('Language')}</FormLabel>
+
+            <FormInputHelpText text={translate('SeriesLanguageHelpText')} />
+            <FormInput
+              type={inputTypes.LANGUAGE_SELECT}
+              name="language"
+              {...settings.language}
+              onChange={handleInputChange}
+            />
+          </FormRow>
+
+          <FormRow size={sizes.MEDIUM}>
             <FormLabel>{translate('Path')}</FormLabel>
 
             <FormInput
@@ -405,6 +420,7 @@ function EditSeriesModalContent({
       <RootFolderModal
         isOpen={isRootFolderModalOpen}
         seriesId={seriesId}
+        languageId={settings.language.value.id}
         rootFolderPath={rootFolderPath}
         onSavePress={handleRootFolderChange}
         onModalClose={handleRootFolderModalClose}

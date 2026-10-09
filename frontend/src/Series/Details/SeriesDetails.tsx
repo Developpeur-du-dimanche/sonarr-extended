@@ -420,12 +420,15 @@ function SeriesDetails({ seriesId }: SeriesDetailsProps) {
     path,
     statistics = {} as Statistics,
     qualityProfileId,
+    language,
     status,
     network,
     originalLanguage,
     overview,
     images,
     seasons,
+    seasonType,
+    seasonTypes,
     genres,
     tags,
     year,
@@ -778,6 +781,29 @@ function SeriesDetails({ seriesId }: SeriesDetailsProps) {
                         <QualityProfileName
                           qualityProfileId={qualityProfileId}
                         />
+                      </span>
+                    </Label>
+
+                    <Label
+                      className={styles.detailsLabel}
+                      title={translate('SeasonType')}
+                      size={sizes.LARGE}
+                      icon={icons.SEASON_TYPE}
+                    >
+                      <span className={styles.seasonTypeName}>
+                        {seasonTypes.find((s) => s.type === seasonType)?.name ??
+                          seasonType}
+                      </span>
+                    </Label>
+
+                    <Label
+                      className={styles.detailsLabel}
+                      title={translate('Language')}
+                      size={sizes.LARGE}
+                      icon={icons.LANGUAGE}
+                    >
+                      <span className={styles.languageName}>
+                        {language.name}
                       </span>
                     </Label>
 

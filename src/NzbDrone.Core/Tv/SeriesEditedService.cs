@@ -18,6 +18,7 @@ namespace NzbDrone.Core.Tv
         public void Handle(SeriesEditedEvent message)
         {
             if (message.Series.SeriesType != message.OldSeries.SeriesType ||
+                message.Series.Language != message.OldSeries.Language ||
                 message.Series.EpisodeOrder != message.OldSeries.EpisodeOrder ||
                 message.Series.TmdbEpisodeGroupId != message.OldSeries.TmdbEpisodeGroupId)
             {

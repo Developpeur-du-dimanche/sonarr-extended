@@ -5,6 +5,7 @@ namespace Sonarr.Api.V5.Settings;
 
 public class MetadataSourceSettingsResource : RestResource
 {
+    public int PreferredMetadataLanguage { get; set; }
     public string? TmdbApiKey { get; set; }
 }
 
@@ -14,6 +15,7 @@ public static class MetadataSourceSettingsResourceMapper
     {
         return new MetadataSourceSettingsResource
         {
+            PreferredMetadataLanguage = model.PreferredMetadataLanguage,
             TmdbApiKey = model.TmdbApiKey
         };
     }

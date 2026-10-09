@@ -29,6 +29,7 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
             _series = Builder<Series>.CreateNew()
                 .With(s => s.Title = "30 Stone")
                 .With(s => s.CleanTitle = "stone")
+                .With(s => s.SeasonType = SeasonType.Official)
                 .Build();
 
             _episodes = Builder<Episode>.CreateListOfSize(1)
@@ -62,6 +63,35 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
         private void GivenDailySeries()
         {
             _series.SeriesType = SeriesTypes.Daily;
+        }
+
+        [TestCase(2)]
+        [TestCase(7)]
+        [TestCase(14)]
+        public void should_match_early_daily_release_to_known_air_date(int days)
+        {
+            GivenDailySeries();
+            var airDate = DateTime.Today.AddDays(days).ToString(Episode.AIR_DATE_FORMAT);
+            _episodes[0].AirDate = airDate;
+            var parsed = Parser.Parser.ParseTitle($"30.Stone.{airDate}.1080p.WEB-DL.H264-Sonarr");
+            parsed.Should().NotBeNull();
+
+            Mocker.GetMock<IEpisodeService>()
+                  .Setup(s => s.FindEpisode(_series.Id, airDate, null))
+                  .Returns(_episodes[0]);
+
+            Subject.Map(parsed, _series).Episodes.Should().ContainSingle().Which.Should().Be(_episodes[0]);
+        }
+
+        [Test]
+        public void should_not_match_early_daily_release_without_matching_episode_metadata()
+        {
+            GivenDailySeries();
+            var airDate = DateTime.Today.AddDays(7).ToString(Episode.AIR_DATE_FORMAT);
+            var parsed = Parser.Parser.ParseTitle($"30.Stone.{airDate}.1080p.WEB-DL.H264-Sonarr");
+            parsed.Should().NotBeNull();
+
+            Subject.Map(parsed, _series).Episodes.Should().BeEmpty();
         }
 
         private void GivenDailyParseResult()
