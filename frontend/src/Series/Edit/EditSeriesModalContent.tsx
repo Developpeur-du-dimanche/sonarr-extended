@@ -59,6 +59,8 @@ function EditSeriesModalContent({
     language,
     searchByAbsoluteNumber,
     episodeOrder,
+    seasonType,
+    seasonTypes,
     tmdbEpisodeGroupId,
     tmdbId,
     path,
@@ -91,6 +93,7 @@ function EditSeriesModalContent({
         language,
         searchByAbsoluteNumber,
         episodeOrder,
+        seasonType,
         tmdbEpisodeGroupId: tmdbEpisodeGroupId ?? '',
         path,
         tags,
@@ -107,6 +110,7 @@ function EditSeriesModalContent({
     language,
     searchByAbsoluteNumber,
     episodeOrder,
+    seasonType,
     tmdbEpisodeGroupId,
     path,
     tags,
@@ -126,6 +130,22 @@ function EditSeriesModalContent({
       enabled: isTmdbOrder && tmdbId > 0,
     },
   });
+
+  // Series refreshed before alternate orders were supported don't know their season types yet
+  const seasonTypeOptions = useMemo(
+    () =>
+      seasonTypes?.length
+        ? seasonTypes
+        : [
+            {
+              type: 'official',
+              name: translate('AiredOrder'),
+              seasonNumbers: [],
+              episodeCount: 0,
+            },
+          ],
+    [seasonTypes]
+  );
 
   const episodeOrderOptions = useMemo<EnhancedSelectInputValue<string>[]>(
     () => [
@@ -328,6 +348,23 @@ function EditSeriesModalContent({
               onChange={handleInputChange}
             />
           </FormRow>
+
+          {isTmdbOrder ? null : (
+            <FormRow size={sizes.MEDIUM}>
+              <FormLabel>{translate('SeasonType')}</FormLabel>
+
+              <FormInputHelpText text={translate('SeasonTypeEditHelpText')} />
+              <FormInput
+                type={inputTypes.SEASON_TYPE_SELECT}
+                name="seasonType"
+                seasonTypes={seasonTypeOptions}
+                includeNoChange={false}
+                includeMixed={false}
+                {...settings.seasonType}
+                onChange={handleInputChange}
+              />
+            </FormRow>
+          )}
 
           {isTmdbOrder ? (
             <FormRow size={sizes.MEDIUM}>

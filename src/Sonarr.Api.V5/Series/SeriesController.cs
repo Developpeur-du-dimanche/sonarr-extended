@@ -254,17 +254,12 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
                 trigger: CommandTrigger.Manual);
         }
 
-        var seasonType = series.SeasonType;
-
         if (seriesResource.Aliases != null)
         {
             _seriesAliasService.SetAliases(series.Id, seriesResource.Aliases.Select(a => a.ToModel()));
         }
 
         var model = seriesResource.ToModel(series);
-
-        // Don't change the season type for an existing series
-        model.SeasonType = seasonType;
 
         _seriesService.UpdateSeries(model);
 

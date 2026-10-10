@@ -19,6 +19,7 @@ namespace NzbDrone.Core.Tv
         {
             if (message.Series.SeriesType != message.OldSeries.SeriesType ||
                 message.Series.Language != message.OldSeries.Language ||
+                message.Series.SeasonType != message.OldSeries.SeasonType ||
                 message.Series.EpisodeOrder != message.OldSeries.EpisodeOrder ||
                 message.Series.TmdbEpisodeGroupId != message.OldSeries.TmdbEpisodeGroupId)
             {
