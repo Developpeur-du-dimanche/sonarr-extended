@@ -19,9 +19,15 @@ Sonarr Extended is an unofficial fork of [Sonarr](https://github.com/Sonarr/Sona
 
 ## Additional Features
 
-- **TMDB metadata source**: use [TMDB](https://www.themoviedb.org/) episode data as an alternative to TVDB for a series
-- **Episode orders**: pick a TMDB episode group per series to use an alternative episode ordering (absolute, DVD, story arcs, …)
+- **TMDB metadata source**: use [TMDB](https://www.themoviedb.org/) episode data as an alternative to TVDB for a series (requires a TMDB API key, set in Settings > Metadata Source)
+- **TMDB episode orders**: pick a TMDB episode group per series to use an alternative episode ordering (absolute, DVD, story arcs, …)
+- **Change the TVDB episode order of an existing series**: Sonarr only lets you pick an alternate TVDB order (DVD, absolute, …) when adding a series; Sonarr Extended also lets you change it afterwards from the series' edit window
 - **Manual series aliases**: add your own alternate titles to a series, on top of the ones Sonarr gets from its scene mapping providers, to match releases and search indexers
+- **Aliases per season**: limit an alias to one season, and set the season number releases use when it differs (for example an anthology season released as season 1)
+- **Search by absolute episode number**: per-series option to also search indexers by absolute number, for series released with absolute numbering that are not tagged as anime
+- **Docker image**: built from this repository by the [Docker](.github/workflows/docker.yml) workflow
+
+Changing the episode order of a series refreshes it. Existing files stay linked to the episode with the same season and episode number, so check them after switching.
 
 Everything else comes from Sonarr: see [Sonarr's features](https://github.com/Sonarr/Sonarr#features).
 
