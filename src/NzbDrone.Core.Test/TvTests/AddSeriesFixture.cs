@@ -108,6 +108,22 @@ namespace NzbDrone.Core.Test.TvTests
         }
 
         [Test]
+        public void should_throw_if_tvdb_has_no_episodes_for_alternate_order()
+        {
+            var newSeries = new Series
+            {
+                TvdbId = 1,
+                Path = @"C:\Test\TV\Title1".AsOsAgnostic(),
+                Language = Language.English,
+                SeasonType = "altdvd"
+            };
+
+            GivenValidSeries(newSeries.TvdbId);
+
+            Assert.Throws<ValidationException>(() => Subject.AddSeries(newSeries));
+        }
+
+        [Test]
         public void should_throw_if_series_cannot_be_found()
         {
             var newSeries = new Series

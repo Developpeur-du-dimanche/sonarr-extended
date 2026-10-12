@@ -129,6 +129,15 @@ namespace NzbDrone.Core.Tv
                                               });
             }
 
+            // SkyHook lists orders it has no episodes for and returns an empty series for them
+            if (newSeries.SeasonType.IsNotNullOrWhiteSpace() && newSeries.SeasonType != SeasonType.Official && tuple.Item2.Empty())
+            {
+                throw new ValidationException(new List<ValidationFailure>
+                                              {
+                                                  new ValidationFailure("SeasonType", "TheTVDB has no episodes for this order", newSeries.SeasonType)
+                                              });
+            }
+
             var series = tuple.Item1;
 
             // If seasons were passed in on the new series use them, otherwise use the seasons from Skyhook

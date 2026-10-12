@@ -1,4 +1,5 @@
 using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -12,6 +13,7 @@ using NzbDrone.Core.MediaFiles;
 using NzbDrone.Core.MediaFiles.Events;
 using NzbDrone.Core.Messaging.Commands;
 using NzbDrone.Core.Messaging.Events;
+using NzbDrone.Core.MetadataSource;
 using NzbDrone.Core.Parser;
 using NzbDrone.Core.RootFolders;
 using NzbDrone.Core.SeriesStats;
@@ -45,6 +47,7 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
     private readonly ISceneMappingService _sceneMappingService;
     private readonly ISeriesTranslationService _seriesTranslationService;
     private readonly ISeriesAliasService _seriesAliasService;
+    private readonly IProvideSeriesInfo _seriesInfo;
     private readonly IMapCoversToLocal _coverMapper;
     private readonly IManageCommandQueue _commandQueueManager;
     private readonly IRootFolderService _rootFolderService;
@@ -58,6 +61,7 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
                         ISceneMappingService sceneMappingService,
                         ISeriesTranslationService seriesTranslationService,
                         ISeriesAliasService seriesAliasService,
+                        IProvideSeriesInfo seriesInfo,
                         IMapCoversToLocal coverMapper,
                         IManageCommandQueue commandQueueManager,
                         IRootFolderService rootFolderService,
@@ -78,6 +82,7 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
         _sceneMappingService = sceneMappingService;
         _seriesTranslationService = seriesTranslationService;
         _seriesAliasService = seriesAliasService;
+        _seriesInfo = seriesInfo;
 
         _coverMapper = coverMapper;
         _commandQueueManager = commandQueueManager;
@@ -239,6 +244,14 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
     public Results<Accepted<SeriesResource>, NotFound> UpdateSeries([FromBody] SeriesResource seriesResource, [FromQuery] bool moveFiles = false)
     {
         var series = _seriesService.GetSeries(seriesResource.Id);
+
+        if (seriesResource.SeasonType != series.SeasonType &&
+            seriesResource.SeasonType != SeasonType.Official &&
+            _seriesInfo.GetSeriesInfo(series.TvdbId, series.Language, seriesResource.SeasonType).Item2.Empty())
+        {
+            // SkyHook lists orders it has no episodes for, refreshing with one would leave the series without episodes
+            throw new ValidationException(new List<ValidationFailure> { new("SeasonType", "TheTVDB has no episodes for this order", seriesResource.SeasonType) });
+        }
 
         if (moveFiles)
         {

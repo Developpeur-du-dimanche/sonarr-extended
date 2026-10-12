@@ -315,6 +315,26 @@ namespace NzbDrone.Core.Test.TvTests
         }
 
         [Test]
+        public void should_keep_existing_episodes_if_tvdb_has_no_episodes_for_alternate_order()
+        {
+            _series.SeasonType = "alttwo";
+
+            Mocker.GetMock<IProvideSeriesInfo>()
+                  .Setup(s => s.GetSeriesInfo(_series.TvdbId, It.IsAny<Language>(), "alttwo"))
+                  .Returns(new Tuple<Series, List<Episode>>(_series.JsonClone(), new List<Episode>()));
+
+            Subject.Execute(new RefreshSeriesCommand(new List<int> { _series.Id }));
+
+            Mocker.GetMock<IRefreshEpisodeService>()
+                  .Verify(v => v.RefreshEpisodeInfo(It.IsAny<Series>(), It.IsAny<IEnumerable<Episode>>()), Times.Never());
+
+            Mocker.GetMock<ISeriesService>()
+                  .Verify(v => v.UpdateSeries(It.Is<Series>(s => s.Seasons.Count == _series.Seasons.Count), It.IsAny<bool>(), It.IsAny<bool>()));
+
+            ExceptionVerification.ExpectedWarns(1);
+        }
+
+        [Test]
         public void should_refresh_with_tmdb_episodes_if_episode_order_is_tmdb()
         {
             var tvdbEpisodes = new List<Episode>

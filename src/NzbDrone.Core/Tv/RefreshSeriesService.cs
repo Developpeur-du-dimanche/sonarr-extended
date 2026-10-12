@@ -137,18 +137,27 @@ namespace NzbDrone.Core.Tv
             if (series.EpisodeOrder == EpisodeOrderType.Tmdb)
             {
                 episodes = GetTmdbEpisodes(series, episodes);
+            }
+            else if (series.SeasonType != SeasonType.Official && episodes.Empty())
+            {
+                // SkyHook lists orders it has no episodes for and returns an empty series for them
+                _logger.Warn("TheTVDB has no episodes for the '{0}' order of {1}, episodes will not be updated", series.SeasonType, series.Title);
+                episodes = null;
+            }
 
-                if (episodes == null)
-                {
-                    // Keep the existing seasons and episodes rather than switching back to TheTVDB order
-                    _seriesService.UpdateSeries(series, publishUpdatedEvent: false);
+            if (episodes == null)
+            {
+                // Keep the existing seasons and episodes rather than removing them or switching to another order
+                _seriesService.UpdateSeries(series, publishUpdatedEvent: false);
 
-                    _logger.Debug("Finished series refresh for {0} without updating episodes", series.Title);
-                    _eventAggregator.PublishEvent(new SeriesUpdatedEvent(series));
+                _logger.Debug("Finished series refresh for {0} without updating episodes", series.Title);
+                _eventAggregator.PublishEvent(new SeriesUpdatedEvent(series));
 
-                    return series;
-                }
+                return series;
+            }
 
+            if (series.EpisodeOrder == EpisodeOrderType.Tmdb)
+            {
                 seriesInfo.Seasons = GetTmdbSeasons(seriesInfo, episodes);
             }
 
