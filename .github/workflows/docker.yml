@@ -1,0 +1,122 @@
+name: Docker
+
+on:
+  workflow_call:
+    inputs:
+      framework:
+        description: ".net framework"
+        type: string
+        required: true
+      branch:
+        description: "Git branch used for this build"
+        type: string
+        required: true
+      version:
+        description: "Sonarr version"
+        type: string
+        required: true
+      tag:
+        description: "Docker image tag to publish"
+        type: string
+        required: true
+
+jobs:
+  image:
+    if: github.repository == 'Developpeur-du-dimanche/sonarr-extended'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check out
+        uses: actions/checkout@v6
+
+      - name: Download Artifact (linux-x64)
+        uses: actions/download-artifact@v8
+        with:
+          name: build-linux-x64
+          path: _output
+
+      - name: Download Artifact (linux-arm64)
+        uses: actions/download-artifact@v8
+        with:
+          name: build-linux-arm64
+          path: _output
+
+      - name: Download Artifact (linux-arm)
+        uses: actions/download-artifact@v8
+        with:
+          name: build-linux-arm
+          path: _output
+
+      - name: Download UI Artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: build_ui
+          path: _output/UI
+
+      - name: Prepare Build Context
+        shell: bash
+        run: |
+          context=_docker
+
+          rm -rf $context
+          mkdir -p $context
+
+          for pair in "linux/amd64:linux-x64" "linux/arm64:linux-arm64" "linux/arm/v7:linux-arm"; do
+            platform="${pair%%:*}"
+            runtime="${pair#*:}"
+            sonarrFolder="$context/$platform/Sonarr"
+
+            echo "Preparing $platform from $runtime"
+
+            mkdir -p "$context/$platform"
+            cp -r "_output/$runtime/${{ inputs.framework }}/Sonarr" "$sonarrFolder"
+            cp -r _output/UI "$sonarrFolder/UI"
+
+            # Updates are handled by pulling a new image
+            rm -rf "$sonarrFolder/Sonarr.Update"
+
+            find "$sonarrFolder" -name "ffprobe" -exec chmod a+x {} \;
+            find "$sonarrFolder" -name "Sonarr" -exec chmod a+x {} \;
+          done
+
+          cat > $context/package_info <<INFO
+          PackageVersion=${{ inputs.version }}
+          PackageAuthor=[Developpeur-du-dimanche](https://github.com/${{ github.repository }})
+          UpdateMethod=Docker
+          Branch=${{ inputs.branch }}
+          INFO
+
+          cp distribution/docker/Dockerfile $context/Dockerfile
+          cp distribution/docker/entrypoint.sh $context/entrypoint.sh
+
+      - name: Docker Metadata
+        id: metadata
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=${{ inputs.tag }}
+          labels: |
+            org.opencontainers.image.version=${{ inputs.version }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Build and Push
+        uses: docker/build-push-action@v6
+        with:
+          context: _docker
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          push: true
+          provenance: false
+          tags: ${{ steps.metadata.outputs.tags }}
+          labels: ${{ steps.metadata.outputs.labels }}

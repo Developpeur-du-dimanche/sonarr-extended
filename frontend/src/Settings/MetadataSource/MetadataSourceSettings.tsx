@@ -13,6 +13,7 @@ import PageHeading from 'Components/Page/PageHeading';
 import { inputTypes, kinds } from 'Helpers/Props';
 import settingsStyles from 'Settings/Settings.module.css';
 import SettingsPage from 'Settings/SettingsPage';
+import { InputChanged } from 'typings/inputs';
 import translate from 'Utilities/String/translate';
 import TheTvdb from './TheTvdb';
 import {
@@ -38,6 +39,13 @@ function MetadataSourceSettings() {
   const handleInputChange = useCallback(
     ({ name, value }: LanguageSelectInputOnChangeProps) => {
       updateSetting(name as keyof MetadataSourceSettingsModel, value as number);
+    },
+    [updateSetting]
+  );
+
+  const handleTmdbApiKeyChange = useCallback(
+    ({ value }: InputChanged<string>) => {
+      updateSetting('tmdbApiKey', value);
     },
     [updateSetting]
   );
@@ -89,6 +97,20 @@ function MetadataSourceSettings() {
                     includeAny={false}
                     onChange={handleInputChange}
                     {...settings.preferredMetadataLanguage}
+                  />
+                </FormRow>
+              </FieldSet>
+
+              <FieldSet legend={translate('TheMovieDb')}>
+                <FormRow>
+                  <FormLabel>{translate('TmdbApiKey')}</FormLabel>
+
+                  <FormInputHelpText text={translate('TmdbApiKeyHelpText')} />
+                  <FormInput
+                    type={inputTypes.PASSWORD}
+                    name="tmdbApiKey"
+                    {...settings.tmdbApiKey}
+                    onChange={handleTmdbApiKeyChange}
                   />
                 </FormRow>
               </FieldSet>

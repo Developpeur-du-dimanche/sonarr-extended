@@ -62,6 +62,9 @@ namespace NzbDrone.Core.Configuration
         ListSyncLevelType ListSyncLevel { get; set; }
         int ListSyncTag { get; set; }
 
+        // Metadata Source
+        string TmdbApiKey { get; set; }
+
         // UI
         int FirstDayOfWeek { get; set; }
         string CalendarWeekColumnHeader { get; set; }
