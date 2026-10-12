@@ -263,11 +263,6 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
 
         _seriesService.UpdateSeries(model);
 
-        PopulateAlternateTitles(seriesResource);
-        PopulateTranslations(seriesResource);
-        PopulateAliases(seriesResource);
-        BroadcastResourceChange(ModelAction.Updated, seriesResource);
-
         return TypedAccepted(seriesResource.Id);
     }
 

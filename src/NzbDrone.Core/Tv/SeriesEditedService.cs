@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using NzbDrone.Core.Messaging.Commands;
 using NzbDrone.Core.Messaging.Events;
 using NzbDrone.Core.Tv.Commands;
@@ -23,7 +22,7 @@ namespace NzbDrone.Core.Tv
                 message.Series.EpisodeOrder != message.OldSeries.EpisodeOrder ||
                 message.Series.TmdbEpisodeGroupId != message.OldSeries.TmdbEpisodeGroupId)
             {
-                _commandQueueManager.Push(new RefreshSeriesCommand(new List<int> { message.Series.Id }, false));
+                _commandQueueManager.Push(new RefreshSeriesCommand([message.Series.Id], false));
             }
         }
     }

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using FluentAssertions;
 using NUnit.Framework;
+using NzbDrone.Core.Datastore;
 using NzbDrone.Core.Datastore.Migration;
 using NzbDrone.Core.Datastore.Migration.Framework;
 using NzbDrone.Core.Test.Framework;
@@ -11,23 +12,29 @@ namespace NzbDrone.Core.Test.Datastore.Migration
     [TestFixture]
     public class release_upstream_migration_versionsFixture : MigrationTest<release_upstream_migration_versions>
     {
-        private const long LastForkMigration = 10004;
+        private const long LastUpstreamMigrationBeforeFork = 233;
 
-        private IDirectDataMapper WithAllForkMigrations(Action<release_upstream_migration_versions> beforeMigration = null)
+        // Reproduces a database migrated by a fork release that still numbered its migrations 234-237
+        private IDirectDataMapper WithForkMigrationsAppliedWithUpstreamVersions()
         {
-            return WithTestDb(new MigrationContext(MigrationType, LastForkMigration)
+            var db = WithTestDb(new MigrationContext(MigrationType, LastUpstreamMigrationBeforeFork)
             {
                 BeforeMigration = m =>
                 {
-                    if (beforeMigration != null && m is release_upstream_migration_versions migration)
+                    if (m is quality_profile_quality_ranks migration)
                     {
-                        beforeMigration(migration);
+                        GivenForkMigrationsAppliedWithUpstreamVersions(migration);
                     }
                 }
-            }).GetDirectDataMapper();
+            });
+
+            var connection = Mocker.Resolve<IConnectionStringFactory>().MainDbConnection;
+            Mocker.Resolve<IMigrationController>().Migrate(connection.ConnectionString, new MigrationContext(MigrationType), connection.DatabaseType);
+
+            return db.GetDirectDataMapper();
         }
 
-        private static void GivenForkMigrationsAppliedWithUpstreamVersions(release_upstream_migration_versions c)
+        private static void GivenForkMigrationsAppliedWithUpstreamVersions(NzbDroneMigrationBase c)
         {
             c.Alter.Table("Series")
                 .AddColumn("EpisodeOrder").AsInt32().WithDefaultValue(0)
@@ -79,10 +86,18 @@ namespace NzbDrone.Core.Test.Datastore.Migration
             });
         }
 
+        private static string GetDescription(IDirectDataMapper db, long version)
+        {
+            return db.Query("SELECT * FROM \"VersionInfo\"")
+                .Where(v => Convert.ToInt64(v["Version"]) == version)
+                .Select(v => (string)v["Description"])
+                .SingleOrDefault();
+        }
+
         [Test]
         public void should_keep_data_when_fork_migrations_were_applied_with_upstream_versions()
         {
-            var db = WithAllForkMigrations(GivenForkMigrationsAppliedWithUpstreamVersions);
+            var db = WithForkMigrationsAppliedWithUpstreamVersions();
 
             var series = db.Query("SELECT * FROM \"Series\"").Single();
 
@@ -98,47 +113,33 @@ namespace NzbDrone.Core.Test.Datastore.Migration
         }
 
         [Test]
-        public void should_release_upstream_versions_used_by_fork_migrations()
+        public void should_run_upstream_migration_reusing_a_version_previously_used_by_the_fork()
         {
-            var db = WithAllForkMigrations(GivenForkMigrationsAppliedWithUpstreamVersions);
+            var db = WithForkMigrationsAppliedWithUpstreamVersions();
 
-            var versions = db.Query("SELECT * FROM \"VersionInfo\"").Select(v => Convert.ToInt64(v["Version"])).ToList();
-
-            versions.Should().NotContain(new[] { 234L, 235L, 236L, 237L });
-            versions.Should().Contain(new[] { 10000L, 10001L, 10002L, 10003L, 10004L });
+            GetDescription(db, 236).Should().Be(nameof(import_list_tag_existing_type));
         }
 
         [Test]
-        public void should_not_release_version_applied_by_an_upstream_migration()
+        public void should_record_fork_migrations_with_their_own_versions()
         {
-            var db = WithAllForkMigrations(c =>
-            {
-                c.Insert.IntoTable("VersionInfo")
-                    .Row(new { Version = 234L, AppliedOn = DateTime.UtcNow, Description = "upstream_migration" });
-            });
+            var db = WithForkMigrationsAppliedWithUpstreamVersions();
 
-            var versions = db.Query("SELECT * FROM \"VersionInfo\"").Select(v => Convert.ToInt64(v["Version"])).ToList();
-
-            versions.Should().Contain(234L);
+            GetDescription(db, 234).Should().BeNull();
+            GetDescription(db, 235).Should().BeNull();
+            GetDescription(db, 237).Should().BeNull();
+            GetDescription(db, 10001).Should().Be(nameof(add_series_episode_order));
+            GetDescription(db, 10004).Should().Be(nameof(add_series_search_by_absolute_number));
         }
 
         [Test]
         public void should_create_fork_schema_on_database_without_it()
         {
-            var db = WithAllForkMigrations();
+            var db = WithTestDb(new MigrationContext(MigrationType)).GetDirectDataMapper();
 
             db.Query("SELECT \"EpisodeOrder\", \"TmdbEpisodeGroupId\", \"SearchByAbsoluteNumber\" FROM \"Series\"").Should().BeEmpty();
             db.Query("SELECT \"SeriesId\", \"Title\", \"SeasonNumber\", \"SceneSeasonNumber\" FROM \"SeriesAliases\"").Should().BeEmpty();
-        }
-
-        [Test]
-        public void should_record_migrations_with_the_description_used_to_release_versions()
-        {
-            var db = WithAllForkMigrations();
-
-            var applied = db.Query("SELECT * FROM \"VersionInfo\"").Single(v => Convert.ToInt64(v["Version"]) == 10001L);
-
-            applied["Description"].Should().Be(nameof(add_series_episode_order));
+            GetDescription(db, 236).Should().Be(nameof(import_list_tag_existing_type));
         }
     }
 }

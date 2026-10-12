@@ -1,6 +1,13 @@
 import classNames from 'classnames';
 import moment from 'moment-timezone';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import CommandNames from 'Commands/CommandNames';
 import { useCommands, useExecuteCommand } from 'Commands/useCommands';
 import Alert from 'Components/Alert';
@@ -59,6 +66,7 @@ import translate from 'Utilities/String/translate';
 import toggleSelected from 'Utilities/Table/toggleSelected';
 import SeriesAlternateTitles from './SeriesAlternateTitles';
 import SeriesDetailsLinks from './SeriesDetailsLinks';
+import SeriesDetailsPath from './SeriesDetailsPath';
 import SeriesDetailsProvider from './SeriesDetailsProvider';
 import SeriesDetailsSeason from './SeriesDetailsSeason';
 import SeriesProgressLabel from './SeriesProgressLabel';
@@ -395,6 +403,29 @@ function SeriesDetails({ seriesId }: SeriesDetailsProps) {
       populate();
     }
   }, [isRefreshing, wasRefreshing, isRenaming, wasRenaming, populate]);
+
+  const overviewRef = useRef<HTMLParagraphElement>(null);
+  const [isOverviewClamped, setIsOverviewClamped] = useState(false);
+
+  useLayoutEffect(() => {
+    const element = overviewRef.current;
+
+    if (!element) {
+      return;
+    }
+
+    const compute = () =>
+      setIsOverviewClamped(
+        !isOverviewExpanded && element.scrollHeight > element.clientHeight
+      );
+
+    compute();
+
+    const observer = new ResizeObserver(compute);
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [series?.overview, isOverviewExpanded]);
 
   let expandIcon = icons.EXPAND_INDETERMINATE;
 
@@ -859,10 +890,7 @@ function SeriesDetails({ seriesId }: SeriesDetailsProps) {
                 </div>
 
                 <div className={styles.heroFooter}>
-                  <div className={styles.pathLine}>
-                    <Icon name={icons.FOLDER} size={14} />
-                    <span>{path}</span>
-                  </div>
+                  <SeriesDetailsPath path={path} />
 
                   <MetadataAttribution />
                 </div>
@@ -880,6 +908,7 @@ function SeriesDetails({ seriesId }: SeriesDetailsProps) {
                 </div>
 
                 <p
+                  ref={overviewRef}
                   className={classNames(
                     styles.overview,
                     !isOverviewExpanded && styles.overviewClamped
@@ -888,12 +917,14 @@ function SeriesDetails({ seriesId }: SeriesDetailsProps) {
                   {overview}
                 </p>
 
-                <Link
-                  className={styles.overviewToggle}
-                  onPress={handleToggleOverview}
-                >
-                  {isOverviewExpanded ? translate('Less') : translate('More')}
-                </Link>
+                {isOverviewClamped || isOverviewExpanded ? (
+                  <Link
+                    className={styles.overviewToggle}
+                    onPress={handleToggleOverview}
+                  >
+                    {isOverviewExpanded ? translate('Less') : translate('More')}
+                  </Link>
+                ) : null}
               </section>
             ) : null}
 
