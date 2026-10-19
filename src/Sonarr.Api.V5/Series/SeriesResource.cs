@@ -32,6 +32,7 @@ public class SeriesResource : RestResource
     public List<SeriesTranslationResource> Translations { get; set; } = [];
     public int Year { get; set; }
     public string? Path { get; set; }
+    public string? PendingPath { get; set; }
     public int QualityProfileId { get; set; }
     public bool SeasonFolder { get; set; }
     public bool SearchByAbsoluteNumber { get; set; }
@@ -95,6 +96,7 @@ public static class SeriesResourceMapper
             OriginalCountry = model.OriginalCountry,
             OriginalLanguage = model.OriginalLanguage,
             Path = model.Path,
+            PendingPath = model.PendingPath,
             QualityProfileId = model.QualityProfileId,
             SeasonFolder = model.SeasonFolder,
             SearchByAbsoluteNumber = model.SearchByAbsoluteNumber,

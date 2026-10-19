@@ -46,7 +46,6 @@ Most of Sonarr's documentation applies to Sonarr Extended as well:
 
 | Sonarr Extended branch | Follows Sonarr branch |
 | ---------------------- | --------------------- |
-| `v5-develop`           | [`v5-develop`](https://github.com/Sonarr/Sonarr/tree/v5-develop) |
 | `develop`              | [`develop`](https://github.com/Sonarr/Sonarr/tree/develop) |
 
 Changes from Sonarr are merged automatically through pull requests opened by the [Sync Upstream](.github/workflows/sync_upstream.yml) workflow.

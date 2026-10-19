@@ -3,14 +3,12 @@ name: Build
 on:
   push:
     branches:
-      - v5-develop
-      - v5-main
+      - develop
     paths-ignore:
       - "src/Sonarr.Api.*/openapi.json"
   pull_request:
     branches:
-      - v5-develop
-      - v5-redesign
+      - develop
     paths-ignore:
       - "src/NzbDrone.Core/Localization/Core/**"
       - "src/Sonarr.Api.*/openapi.json"
@@ -217,7 +215,7 @@ jobs:
           binary_path: ${{ matrix.binary_path }}
 
   deploy:
-    if: ${{ github.repository == 'Developpeur-du-dimanche/sonarr-extended' && github.event_name == 'push' && (github.ref_name == 'v5-develop' || github.ref_name == 'v5-main') }}
+    if: ${{ github.repository == 'Developpeur-du-dimanche/sonarr-extended' && github.event_name == 'push' && (github.ref_name == 'develop' || github.ref_name == 'main') }}
     needs:
       [
         prepare,
@@ -237,7 +235,7 @@ jobs:
       version: ${{ needs.prepare.outputs.version }}
 
   docker:
-    if: ${{ github.repository == 'Developpeur-du-dimanche/sonarr-extended' && github.event_name == 'push' && github.ref_name == 'v5-develop' }}
+    if: ${{ github.repository == 'Developpeur-du-dimanche/sonarr-extended' && github.event_name == 'push' && github.ref_name == 'develop' }}
     # Integration tests rely on external services and must not block the image
     needs:
       [

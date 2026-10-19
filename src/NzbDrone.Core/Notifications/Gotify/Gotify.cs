@@ -13,7 +13,7 @@ namespace NzbDrone.Core.Notifications.Gotify
 {
     public class Gotify : NotificationBase<GotifySettings>
     {
-        private const string SonarrImageUrl = "https://raw.githubusercontent.com/Developpeur-du-dimanche/sonarr-extended/v5-develop/Logo/128.png";
+        private const string SonarrImageUrl = "https://raw.githubusercontent.com/Developpeur-du-dimanche/sonarr-extended/develop/Logo/128.png";
 
         private readonly IGotifyProxy _proxy;
         private readonly ILocalizationService _localizationService;

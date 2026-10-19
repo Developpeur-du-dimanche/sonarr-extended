@@ -6,7 +6,7 @@ on:
     - cron: "0 0 * * 1"
   push:
     branches:
-      - v5-develop
+      - develop
     paths:
       - ".github/workflows/api_docs.yml"
       - "docs.sh"
@@ -28,7 +28,7 @@ jobs:
       pull-requests: write
     env:
       GH_TOKEN: ${{ secrets.OPENAPI_PAT || github.token }}
-      BASE_BRANCH: v5-develop
+      BASE_BRANCH: develop
     steps:
       - uses: actions/checkout@v6
 

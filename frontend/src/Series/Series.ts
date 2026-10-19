@@ -109,6 +109,7 @@ interface Series extends ModelBase {
   language: Language;
   overview: string;
   path: string;
+  pendingPath?: string;
   previousAiring?: string;
   nextAiring?: string;
   qualityProfileId: number;

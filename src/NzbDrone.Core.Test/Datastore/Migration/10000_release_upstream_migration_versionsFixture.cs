@@ -113,10 +113,11 @@ namespace NzbDrone.Core.Test.Datastore.Migration
         }
 
         [Test]
-        public void should_run_upstream_migration_reusing_a_version_previously_used_by_the_fork()
+        public void should_run_upstream_migrations_reusing_versions_previously_used_by_the_fork()
         {
             var db = WithForkMigrationsAppliedWithUpstreamVersions();
 
+            GetDescription(db, 234).Should().Be(nameof(add_pending_path_to_series));
             GetDescription(db, 236).Should().Be(nameof(import_list_tag_existing_type));
         }
 
@@ -125,7 +126,6 @@ namespace NzbDrone.Core.Test.Datastore.Migration
         {
             var db = WithForkMigrationsAppliedWithUpstreamVersions();
 
-            GetDescription(db, 234).Should().BeNull();
             GetDescription(db, 235).Should().BeNull();
             GetDescription(db, 237).Should().BeNull();
             GetDescription(db, 10001).Should().Be(nameof(add_series_episode_order));
