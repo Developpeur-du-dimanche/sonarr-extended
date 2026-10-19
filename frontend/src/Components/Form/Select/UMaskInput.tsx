@@ -1,12 +1,13 @@
 /* eslint-disable no-bitwise */
-import PropTypes from 'prop-types';
 import React, { SyntheticEvent } from 'react';
 import { InputChanged } from 'typings/inputs';
 import translate from 'Utilities/String/translate';
-import EnhancedSelectInput from './EnhancedSelectInput';
-import styles from './UMaskInput.css';
+import EnhancedSelectInput, {
+  EnhancedSelectInputValue,
+} from './EnhancedSelectInput';
+import styles from './UMaskInput.module.css';
 
-const umaskOptions = [
+const umaskOptions: EnhancedSelectInputValue<string>[] = [
   {
     key: '755',
     get value() {
@@ -54,6 +55,7 @@ function formatPermissions(permissions: number) {
   for (let i = 0; i < 9; i++) {
     const bit = (permissions & (1 << i)) !== 0;
     let digit = bit ? 'xwr'[i % 3] : '-';
+
     if (i === 6 && hasSetUID) {
       digit = bit ? 's' : 'S';
     } else if (i === 3 && hasSetGID) {
@@ -61,13 +63,15 @@ function formatPermissions(permissions: number) {
     } else if (i === 0 && hasSticky) {
       digit = bit ? 't' : 'T';
     }
+
     result = digit + result;
   }
 
   return result;
 }
 
-interface UMaskInputProps {
+export interface UMaskInputProps {
+  id?: string;
   name: string;
   value: string;
   hasError?: boolean;
@@ -77,7 +81,7 @@ interface UMaskInputProps {
   onBlur?: (event: SyntheticEvent) => void;
 }
 
-function UMaskInput({ name, value, onChange }: UMaskInputProps) {
+function UMaskInput({ id, name, value, onChange }: UMaskInputProps) {
   const valueNum = parseInt(value, 8);
   const umaskNum = 0o777 & ~valueNum;
   const umask = umaskNum.toString(8).padStart(4, '0');
@@ -96,6 +100,7 @@ function UMaskInput({ name, value, onChange }: UMaskInputProps) {
       <div className={styles.inputWrapper}>
         <div className={styles.inputUnitWrapper}>
           <EnhancedSelectInput
+            id={id}
             name={name}
             value={value}
             values={values}
@@ -128,15 +133,5 @@ function UMaskInput({ name, value, onChange }: UMaskInputProps) {
     </div>
   );
 }
-
-UMaskInput.propTypes = {
-  name: PropTypes.string.isRequired,
-  value: PropTypes.string.isRequired,
-  hasError: PropTypes.bool,
-  hasWarning: PropTypes.bool,
-  onChange: PropTypes.func.isRequired,
-  onFocus: PropTypes.func,
-  onBlur: PropTypes.func,
-};
 
 export default UMaskInput;

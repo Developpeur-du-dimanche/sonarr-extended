@@ -36,6 +36,7 @@ namespace NzbDrone.Core.HealthCheck.Checks
 
                 return new HealthCheck(GetType(),
                     HealthCheckResult.Warning,
+                    HealthCheckReason.AllowedHostsNotConfigured,
                     _localizationService.GetLocalizedString("AllowedHostsNotConfiguredHealthCheckMessage"),
                     "#allowed-hosts-not-configured");
             }

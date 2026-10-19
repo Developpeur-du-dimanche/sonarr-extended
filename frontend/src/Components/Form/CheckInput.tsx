@@ -5,19 +5,21 @@ import { icons } from 'Helpers/Props';
 import { Kind } from 'Helpers/Props/kinds';
 import { CheckInputChanged } from 'typings/inputs';
 import FormInputHelpText from './FormInputHelpText';
-import styles from './CheckInput.css';
+import styles from './CheckInput.module.css';
 
 interface ChangeEvent<T = Element> extends SyntheticEvent<T, MouseEvent> {
   target: EventTarget & T;
 }
 
-interface CheckInputProps {
+export interface CheckInputProps {
+  id?: string;
+  ariaLabel?: string;
   className?: string;
   containerClassName?: string;
   name: string;
   checkedValue?: boolean;
   uncheckedValue?: boolean;
-  value?: string | boolean;
+  value?: string | boolean | null;
   helpText?: string;
   helpTextWarning?: string;
   isDisabled?: boolean;
@@ -27,6 +29,8 @@ interface CheckInputProps {
 
 function CheckInput(props: CheckInputProps) {
   const {
+    id,
+    ariaLabel,
     className = styles.input,
     containerClassName = styles.container,
     name,
@@ -45,7 +49,6 @@ function CheckInput(props: CheckInputProps) {
   const isChecked = value === checkedValue;
   const isUnchecked = value === uncheckedValue;
   const isIndeterminate = !isChecked && !isUnchecked;
-  const isCheckClass: keyof typeof styles = `${kind}IsChecked`;
 
   const toggleChecked = useCallback(
     (checked: boolean, shiftKey: boolean) => {
@@ -65,6 +68,10 @@ function CheckInput(props: CheckInputProps) {
   const handleClick = useCallback(
     (event: SyntheticEvent<HTMLElement, MouseEvent>) => {
       if (isDisabled) {
+        return;
+      }
+
+      if (event.target === inputRef.current) {
         return;
       }
 
@@ -103,7 +110,9 @@ function CheckInput(props: CheckInputProps) {
           ref={inputRef}
           className={styles.checkbox}
           type="checkbox"
+          id={id}
           name={name}
+          aria-label={ariaLabel}
           checked={isChecked}
           disabled={isDisabled}
           onChange={handleChange}
@@ -112,7 +121,7 @@ function CheckInput(props: CheckInputProps) {
         <div
           className={classNames(
             className,
-            isChecked ? styles[isCheckClass] : styles.isNotChecked,
+            isChecked ? styles[kind] : styles.isNotChecked,
             isIndeterminate && styles.isIndeterminate,
             isDisabled && styles.isDisabled
           )}

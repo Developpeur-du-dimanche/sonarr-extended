@@ -49,6 +49,8 @@ namespace NzbDrone.Core.Test.HealthCheck.Checks
             GivenAuthenticationRequired(AuthenticationRequiredType.DisabledForLocalAddresses);
 
             Subject.Check().ShouldBeWarning();
+
+            ExceptionVerification.ExpectedWarns(1);
         }
 
         [Test]
@@ -80,6 +82,8 @@ namespace NzbDrone.Core.Test.HealthCheck.Checks
             GivenAuthenticationRequired(AuthenticationRequiredType.DisabledForLocalAddresses);
 
             Subject.Check().ShouldBeWarning();
+
+            ExceptionVerification.ExpectedWarns(1);
         }
     }
 }
