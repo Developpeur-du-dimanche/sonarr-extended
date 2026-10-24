@@ -101,6 +101,10 @@ jobs:
           labels: |
             org.opencontainers.image.version=${{ inputs.version }}
 
+      # The Dockerfile runs commands (apt-get), the arm images need emulation to build on an x64 runner
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
