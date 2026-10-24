@@ -157,7 +157,8 @@ jobs:
 
   unit_test_postgres:
     needs: backend
-    runs-on: ubuntu-latest
+    # ikalnytskyi/action-setup-postgres@v8 relies on apt-key, which ubuntu-26.04 (ubuntu-latest) no longer ships
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
