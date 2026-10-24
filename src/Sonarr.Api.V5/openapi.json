@@ -7890,6 +7890,38 @@
         }
       }
     },
+    "/api/v5/tmdb/episodegroup": {
+      "get": {
+        "tags": [
+          "TmdbEpisodeGroup"
+        ],
+        "parameters": [
+          {
+            "name": "tmdbId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TmdbEpisodeGroupResource"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v5/settings/ui": {
       "get": {
         "tags": [
@@ -9387,6 +9419,13 @@
           "episodeFileDeleted",
           "episodeFileRenamed",
           "downloadIgnored"
+        ],
+        "type": "string"
+      },
+      "EpisodeOrderType": {
+        "enum": [
+          "tvdb",
+          "tmdb"
         ],
         "type": "string"
       },
@@ -11283,6 +11322,10 @@
           "preferredMetadataLanguage": {
             "type": "integer",
             "format": "int32"
+          },
+          "tmdbApiKey": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -11523,11 +11566,6 @@
             },
             "nullable": true
           },
-          "seasonNumber": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
           "episodeNumbers": {
             "type": "array",
             "items": {
@@ -11647,11 +11685,6 @@
           },
           "fullSeason": {
             "type": "boolean"
-          },
-          "seasonNumber": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
           },
           "seasonNumbers": {
             "type": "array",
@@ -13090,6 +13123,26 @@
         },
         "additionalProperties": false
       },
+      "SeriesAliasResource": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "seasonNumber": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "sceneSeasonNumber": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "SeriesEditorResource": {
         "type": "object",
         "properties": {
@@ -13182,6 +13235,13 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AlternateTitleResource"
+            },
+            "nullable": true
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SeriesAliasResource"
             },
             "nullable": true
           },
@@ -13283,6 +13343,9 @@
           "seasonFolder": {
             "type": "boolean"
           },
+          "searchByAbsoluteNumber": {
+            "type": "boolean"
+          },
           "monitored": {
             "type": "boolean"
           },
@@ -13291,6 +13354,13 @@
           },
           "useSceneNumbering": {
             "type": "boolean"
+          },
+          "episodeOrder": {
+            "$ref": "#/components/schemas/EpisodeOrderType"
+          },
+          "tmdbEpisodeGroupId": {
+            "type": "string",
+            "nullable": true
           },
           "runtime": {
             "type": "integer",
@@ -14006,6 +14076,47 @@
         },
         "additionalProperties": false
       },
+      "TmdbEpisodeGroupResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "$ref": "#/components/schemas/TmdbEpisodeGroupType"
+          },
+          "episodeCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "groupCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TmdbEpisodeGroupType": {
+        "enum": [
+          "originalAirDate",
+          "absolute",
+          "dvd",
+          "digital",
+          "storyArc",
+          "production",
+          "tv"
+        ],
+        "type": "string"
+      },
       "TrackedDownloadState": {
         "enum": [
           "downloading",
@@ -14483,6 +14594,9 @@
     },
     {
       "name": "Task"
+    },
+    {
+      "name": "TmdbEpisodeGroup"
     },
     {
       "name": "UiSettings"
