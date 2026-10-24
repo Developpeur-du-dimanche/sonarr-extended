@@ -157,12 +157,26 @@ jobs:
 
   unit_test_postgres:
     needs: backend
-    # ikalnytskyi/action-setup-postgres@v8 relies on apt-key, which ubuntu-26.04 (ubuntu-latest) no longer ships
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         postgres-version: [16, 17, 18]
+    # A service container rather than ikalnytskyi/action-setup-postgres, which relies on apt-key
+    # and fails on ubuntu-26.04
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgres-version }}
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - name: Check out
         uses: actions/checkout@v6
