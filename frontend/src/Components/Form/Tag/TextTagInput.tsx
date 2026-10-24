@@ -18,9 +18,12 @@ export interface TextTagInputProps
   onChange: (change: InputChanged<string[]>) => unknown;
 }
 
+const DEFAULT_DELIMITERS = ['Tab', 'Enter', ','];
+
 function TextTagInput({
   name,
   value,
+  delimiters = DEFAULT_DELIMITERS,
   onChange,
   ...otherProps
 }: TextTagInputProps) {
@@ -50,9 +53,10 @@ function TextTagInput({
       // to oddities with restrictions (as an example).
 
       const newValue = [...valueArray];
-      const newTags = newTag.name.startsWith('/')
-        ? [newTag.name]
-        : split(newTag.name);
+      const newTags =
+        newTag.name.startsWith('/') || !delimiters.includes(',')
+          ? [newTag.name]
+          : split(newTag.name);
 
       newTags.forEach((newTag) => {
         const newTagValue = newTag.trim();
@@ -64,7 +68,7 @@ function TextTagInput({
 
       onChange({ name, value: newValue });
     },
-    [name, valueArray, onChange]
+    [name, valueArray, delimiters, onChange]
   );
 
   const handleTagDelete = useCallback(
@@ -100,7 +104,7 @@ function TextTagInput({
     <TagInput
       {...otherProps}
       name={name}
-      delimiters={['Tab', 'Enter', ',']}
+      delimiters={delimiters}
       tags={tags}
       tagList={tagList}
       onTagAdd={handleTagAdd}

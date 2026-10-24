@@ -1,0 +1,36 @@
+.title {
+  composes: cell from 'Components/Table/Cells/TableRowCell.module.css';
+
+  color: var(--disabledColor);
+}
+
+.comment {
+  color: var(--disabledColor);
+  font-size: $smallFontSize;
+}
+
+.season {
+  composes: cell from 'Components/Table/Cells/TableRowCell.module.css';
+
+  width: 160px;
+  color: var(--disabledColor);
+}
+
+.releaseSeason {
+  composes: cell from 'Components/Table/Cells/TableRowCell.module.css';
+
+  width: 110px;
+}
+
+.source {
+  composes: cell from 'Components/Table/Cells/TableRowCell.module.css';
+
+  width: 110px;
+  color: var(--disabledColor);
+}
+
+.actions {
+  composes: cell from 'Components/Table/Cells/TableRowCell.module.css';
+
+  width: 45px;
+}
