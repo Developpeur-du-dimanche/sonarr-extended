@@ -119,6 +119,7 @@ namespace NzbDrone.Core.Test.Datastore.Migration
 
             GetDescription(db, 234).Should().Be(nameof(add_pending_path_to_series));
             GetDescription(db, 236).Should().Be(nameof(import_list_tag_existing_type));
+            GetDescription(db, 237).Should().Be(nameof(pending_releases_season_numbers));
         }
 
         [Test]
@@ -127,7 +128,6 @@ namespace NzbDrone.Core.Test.Datastore.Migration
             var db = WithForkMigrationsAppliedWithUpstreamVersions();
 
             GetDescription(db, 235).Should().BeNull();
-            GetDescription(db, 237).Should().BeNull();
             GetDescription(db, 10001).Should().Be(nameof(add_series_episode_order));
             GetDescription(db, 10004).Should().Be(nameof(add_series_search_by_absolute_number));
         }

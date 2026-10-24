@@ -184,7 +184,7 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
         {
             _series.SeriesType = SeriesTypes.Standard;
 
-            _parsedEpisodeInfo.SeasonNumber = 0;
+            _parsedEpisodeInfo.SeasonNumbers = [0];
             _parsedEpisodeInfo.EpisodeNumbers = Array.Empty<int>();
             _parsedEpisodeInfo.AbsoluteEpisodeNumbers = new[] { 1179 };
 
@@ -213,7 +213,7 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
         {
             _series.SeriesType = SeriesTypes.Standard;
 
-            _parsedEpisodeInfo.SeasonNumber = 0;
+            _parsedEpisodeInfo.SeasonNumbers = [0];
             _parsedEpisodeInfo.EpisodeNumbers = Array.Empty<int>();
             _parsedEpisodeInfo.AbsoluteEpisodeNumbers = new[] { 1179 };
 
@@ -486,7 +486,7 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
             Subject.GetEpisodes(_parsedEpisodeInfo, _series, true, null);
 
             Mocker.GetMock<IEpisodeService>()
-                .Verify(v => v.FindEpisode(_series.Id, _parsedEpisodeInfo.SeasonNumber.Value, _parsedEpisodeInfo.EpisodeNumbers.First()), Times.Never());
+                .Verify(v => v.FindEpisode(_series.Id, _parsedEpisodeInfo.SeasonNumbers.First(), _parsedEpisodeInfo.EpisodeNumbers.First()), Times.Never());
 
             Mocker.GetMock<IEpisodeService>()
                 .Verify(v => v.FindEpisode(_series.Id, tvdbSeasonNumber, _parsedEpisodeInfo.EpisodeNumbers.First()), Times.Once());
@@ -507,7 +507,7 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
                 .Verify(v => v.FindEpisode(_series.Id, tvdbSeasonNumber, _parsedEpisodeInfo.EpisodeNumbers.First()), Times.Never());
 
             Mocker.GetMock<IEpisodeService>()
-                .Verify(v => v.FindEpisode(_series.Id, _parsedEpisodeInfo.SeasonNumber.Value, _parsedEpisodeInfo.EpisodeNumbers.First()), Times.Once());
+                .Verify(v => v.FindEpisode(_series.Id, _parsedEpisodeInfo.SeasonNumbers.First(), _parsedEpisodeInfo.EpisodeNumbers.First()), Times.Once());
         }
 
         [Test]
@@ -521,7 +521,7 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
                 .Verify(v => v.FindEpisode(_series.Id, tvdbSeasonNumber, _parsedEpisodeInfo.EpisodeNumbers.First()), Times.Never());
 
             Mocker.GetMock<IEpisodeService>()
-                .Verify(v => v.FindEpisode(_series.Id, _parsedEpisodeInfo.SeasonNumber.Value, _parsedEpisodeInfo.EpisodeNumbers.First()), Times.Once());
+                .Verify(v => v.FindEpisode(_series.Id, _parsedEpisodeInfo.SeasonNumbers.First(), _parsedEpisodeInfo.EpisodeNumbers.First()), Times.Once());
         }
 
         [Test]
@@ -531,7 +531,7 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
 
             Mocker.GetMock<ISceneMappingService>()
                   .Setup(s => s.FindSceneMapping(_parsedEpisodeInfo.SeriesTitle, It.IsAny<string>(), It.IsAny<int>()))
-                  .Returns(new SceneMapping { SeasonNumber = tvdbSeasonNumber, SceneSeasonNumber = _parsedEpisodeInfo.SeasonNumber });
+                  .Returns(new SceneMapping { SeasonNumber = tvdbSeasonNumber, SceneSeasonNumber = _parsedEpisodeInfo.SeasonNumbers.First() });
 
             Subject.GetEpisodes(_parsedEpisodeInfo, _series, true, null);
 
@@ -539,7 +539,7 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
                 .Verify(v => v.FindEpisode(_series.Id, tvdbSeasonNumber, _parsedEpisodeInfo.EpisodeNumbers.First()), Times.Never());
 
             Mocker.GetMock<IEpisodeService>()
-                .Verify(v => v.FindEpisode(_series.Id, _parsedEpisodeInfo.SeasonNumber.Value, _parsedEpisodeInfo.EpisodeNumbers.First()), Times.Once());
+                .Verify(v => v.FindEpisode(_series.Id, _parsedEpisodeInfo.SeasonNumbers.First(), _parsedEpisodeInfo.EpisodeNumbers.First()), Times.Once());
         }
 
         [Test]
@@ -548,7 +548,7 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
             GivenFullSeason();
 
             Mocker.GetMock<IEpisodeService>()
-                .Setup(s => s.GetEpisodesBySeason(_series.Id, _parsedEpisodeInfo.SeasonNumber.Value))
+                .Setup(s => s.GetEpisodesBySeason(_series.Id, _parsedEpisodeInfo.SeasonNumbers.First()))
                 .Returns(_episodes);
 
             Subject.GetEpisodes(_parsedEpisodeInfo, _series, true, null);
@@ -567,7 +567,7 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
             GivenFullSeason();
 
             Mocker.GetMock<IEpisodeService>()
-                .Setup(s => s.GetEpisodesBySceneSeason(_series.Id, _parsedEpisodeInfo.SeasonNumber.Value))
+                .Setup(s => s.GetEpisodesBySceneSeason(_series.Id, _parsedEpisodeInfo.SeasonNumbers.First()))
                 .Returns(_episodes);
 
             Subject.GetEpisodes(_parsedEpisodeInfo, _series, true, null);
@@ -586,11 +586,11 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
             GivenFullSeason();
 
             Mocker.GetMock<IEpisodeService>()
-                .Setup(s => s.GetEpisodesBySceneSeason(_series.Id, _parsedEpisodeInfo.SeasonNumber.Value))
+                .Setup(s => s.GetEpisodesBySceneSeason(_series.Id, _parsedEpisodeInfo.SeasonNumbers.First()))
                 .Returns([]);
 
             Mocker.GetMock<IEpisodeService>()
-                .Setup(s => s.GetEpisodesBySeason(_series.Id, _parsedEpisodeInfo.SeasonNumber.Value))
+                .Setup(s => s.GetEpisodesBySeason(_series.Id, _parsedEpisodeInfo.SeasonNumbers.First()))
                 .Returns(_episodes);
 
             Subject.GetEpisodes(_parsedEpisodeInfo, _series, true, null);
@@ -669,7 +669,7 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
             Subject.Map(_parsedEpisodeInfo, _series.TvdbId, _series.TvRageId, _series.ImdbId);
 
             Mocker.GetMock<IEpisodeService>()
-                  .Verify(v => v.FindEpisode(_series.TvdbId, _parsedEpisodeInfo.SeasonNumber.Value, _parsedEpisodeInfo.EpisodeNumbers.First()), Times.Once());
+                  .Verify(v => v.FindEpisode(_series.TvdbId, _parsedEpisodeInfo.SeasonNumbers.First(), _parsedEpisodeInfo.EpisodeNumbers.First()), Times.Once());
         }
     }
 }

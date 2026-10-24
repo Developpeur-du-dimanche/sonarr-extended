@@ -267,7 +267,7 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
             };
 
             Mocker.GetMock<ISceneMappingService>()
-                .Setup(s => s.FindSceneMapping(_parsedEpisodeInfo.SeriesTitle, _parsedEpisodeInfo.ReleaseTitle, _parsedEpisodeInfo.SeasonNumber.Value))
+                .Setup(s => s.FindSceneMapping(_parsedEpisodeInfo.SeriesTitle, _parsedEpisodeInfo.ReleaseTitle, _parsedEpisodeInfo.SeasonNumbers.First()))
                 .Returns(sceneMapping);
 
             var result = Subject.Map(_parsedEpisodeInfo, _series);
@@ -287,7 +287,7 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
             };
 
             Mocker.GetMock<ISceneMappingService>()
-                .Setup(s => s.FindSceneMapping(_parsedEpisodeInfo.SeriesTitle, _parsedEpisodeInfo.ReleaseTitle, _parsedEpisodeInfo.SeasonNumber.Value))
+                .Setup(s => s.FindSceneMapping(_parsedEpisodeInfo.SeriesTitle, _parsedEpisodeInfo.ReleaseTitle, _parsedEpisodeInfo.SeasonNumbers.First()))
                 .Returns(sceneMapping);
 
             var result = Subject.Map(_parsedEpisodeInfo, _series);
@@ -298,7 +298,7 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
         [Test]
         public void should_map_release_season_to_series_season_for_series_alias_with_release_season()
         {
-            _parsedEpisodeInfo.SeasonNumber = 1;
+            _parsedEpisodeInfo.SeasonNumbers = [1];
 
             var sceneMapping = new SceneMapping
             {
@@ -308,7 +308,7 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
             };
 
             Mocker.GetMock<ISceneMappingService>()
-                .Setup(s => s.FindSceneMapping(_parsedEpisodeInfo.SeriesTitle, _parsedEpisodeInfo.ReleaseTitle, _parsedEpisodeInfo.SeasonNumber.Value))
+                .Setup(s => s.FindSceneMapping(_parsedEpisodeInfo.SeriesTitle, _parsedEpisodeInfo.ReleaseTitle, _parsedEpisodeInfo.SeasonNumbers.First()))
                 .Returns(sceneMapping);
 
             var result = Subject.Map(_parsedEpisodeInfo, _series);
@@ -319,7 +319,7 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
         [Test]
         public void should_not_change_season_for_series_alias_restricted_to_a_season()
         {
-            _parsedEpisodeInfo.SeasonNumber = 4;
+            _parsedEpisodeInfo.SeasonNumbers = [4];
 
             var sceneMapping = new SceneMapping
             {
@@ -329,7 +329,7 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
             };
 
             Mocker.GetMock<ISceneMappingService>()
-                .Setup(s => s.FindSceneMapping(_parsedEpisodeInfo.SeriesTitle, _parsedEpisodeInfo.ReleaseTitle, _parsedEpisodeInfo.SeasonNumber.Value))
+                .Setup(s => s.FindSceneMapping(_parsedEpisodeInfo.SeriesTitle, _parsedEpisodeInfo.ReleaseTitle, _parsedEpisodeInfo.SeasonNumbers.First()))
                 .Returns(sceneMapping);
 
             var result = Subject.Map(_parsedEpisodeInfo, _series);
@@ -436,7 +436,7 @@ namespace NzbDrone.Core.Test.ParserTests.ParsingServiceTests
         {
             GivenMatchBySeriesTitle();
 
-            _parsedEpisodeInfo.SeasonNumber = null;
+            _parsedEpisodeInfo.SeasonNumbers = [];
             _parsedEpisodeInfo.IsSeasonTitle = true;
             _parsedEpisodeInfo.EpisodeNumbers = [];
 
