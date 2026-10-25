@@ -5,6 +5,8 @@ namespace NzbDrone.Core.DataAugmentation.Scene
 {
     public class SceneMapping : ModelBase
     {
+        public const string SeriesAliasType = "SeriesAlias";
+
         public string MappingId { get; set; }
         public string Title { get; set; }
         public string ParseTerm { get; set; }

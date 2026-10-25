@@ -24,7 +24,9 @@ env:
   VERSION: 5.0.0
 
 jobs:
+  # Only run on the fork, every other job depends on prepare or checks the repository itself
   prepare:
+    if: github.repository == 'Developpeur-du-dimanche/sonarr-extended'
     runs-on: ubuntu-latest
     outputs:
       framework: ${{ steps.variables.outputs.framework }}
@@ -93,6 +95,7 @@ jobs:
           package_tests: ${{ matrix.package_tests }}
 
   frontend:
+    if: github.repository == 'Developpeur-du-dimanche/sonarr-extended'
     runs-on: ubuntu-latest
     steps:
       - name: Check out
@@ -159,6 +162,21 @@ jobs:
       fail-fast: false
       matrix:
         postgres-version: [16, 17, 18]
+    # A service container rather than ikalnytskyi/action-setup-postgres, which relies on apt-key
+    # and fails on ubuntu-26.04
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgres-version }}
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - name: Check out
         uses: actions/checkout@v6
@@ -212,7 +230,7 @@ jobs:
           binary_path: ${{ matrix.binary_path }}
 
   deploy:
-    if: ${{ github.repository == 'Sonarr/Sonarr' && github.ref_name == 'develop' }}
+    if: ${{ github.repository == 'Developpeur-du-dimanche/sonarr-extended' && github.event_name == 'push' && (github.ref_name == 'develop' || github.ref_name == 'main') }}
     needs:
       [
         prepare,
@@ -222,7 +240,6 @@ jobs:
         unit_test_postgres,
         integration_test,
       ]
-    secrets: inherit
     uses: ./.github/workflows/deploy.yml
     permissions:
       contents: write
@@ -232,8 +249,9 @@ jobs:
       major_version: ${{ needs.prepare.outputs.major_version }}
       version: ${{ needs.prepare.outputs.version }}
 
-  notify:
-    name: Discord Notification
+  docker:
+    if: ${{ github.repository == 'Developpeur-du-dimanche/sonarr-extended' && github.event_name == 'push' && github.ref_name == 'develop' }}
+    # Integration tests rely on external services and must not block the image
     needs:
       [
         prepare,
@@ -241,24 +259,13 @@ jobs:
         frontend,
         unit_test,
         unit_test_postgres,
-        integration_test,
-        deploy,
       ]
-    if: ${{ !cancelled() && github.repository == 'Sonarr/Sonarr' && github.ref_name == 'develop' }}
-    env:
-      STATUS: ${{ contains(needs.*.result, 'failure') && 'failure' || 'success' }}
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Notify
-        uses: tsickert/discord-webhook@v7.0.0
-        with:
-          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          username: "GitHub Actions"
-          avatar-url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-          embed-title: "${{ github.workflow }}: ${{ env.STATUS == 'success' && 'Success' || 'Failure' }}"
-          embed-url: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          embed-description: |
-            **Branch** ${{ github.ref }}
-            **Build** ${{ needs.prepare.outputs.version }}
-          embed-color: ${{ env.STATUS == 'success' && '3066993' || '15158332' }}
+    uses: ./.github/workflows/docker.yml
+    permissions:
+      contents: read
+      packages: write
+    with:
+      framework: ${{ needs.prepare.outputs.framework }}
+      branch: ${{ github.ref_name }}
+      version: ${{ needs.prepare.outputs.version }}
+      tag: develop
