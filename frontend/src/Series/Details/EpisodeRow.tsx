@@ -86,6 +86,7 @@ function EpisodeRow({
   onMonitorEpisodePress,
 }: EpisodeRowProps) {
   const {
+    title: seriesTitle,
     useSceneNumbering,
     monitored: seriesMonitored,
     seriesType,
@@ -160,7 +161,6 @@ function EpisodeRow({
                 episodeTitle={title}
                 episodeEntity="episodes"
                 finaleType={finaleType}
-                showOpenSeriesButton={false}
               />
             </TableRowCell>
           );
@@ -310,8 +310,10 @@ function EpisodeRow({
               episodeId={id}
               episodeEntity="episodes"
               seriesId={seriesId}
+              seriesTitle={seriesTitle}
+              seasonNumber={seasonNumber}
+              episodeNumber={episodeNumber}
               episodeTitle={title}
-              showOpenSeriesButton={false}
             />
           );
         }

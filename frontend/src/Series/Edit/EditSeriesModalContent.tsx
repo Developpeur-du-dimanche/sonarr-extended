@@ -14,10 +14,13 @@ import ModalBody from 'Components/Modal/ModalBody';
 import ModalContent from 'Components/Modal/ModalContent';
 import ModalFooter from 'Components/Modal/ModalFooter';
 import ModalHeader from 'Components/Modal/ModalHeader';
+import PendingChangesModal from 'Components/Modal/PendingChangesModal';
 import Popover from 'Components/Tooltip/Popover';
 import useApiQuery from 'Helpers/Hooks/useApiQuery';
+import useModalCloseGuard from 'Helpers/Hooks/useModalCloseGuard';
 import { usePendingChangesStore } from 'Helpers/Hooks/usePendingChangesStore';
 import usePrevious from 'Helpers/Hooks/usePrevious';
+import useUnsavedChanges from 'Helpers/Hooks/useUnsavedChanges';
 import {
   icons,
   inputTypes,
@@ -70,9 +73,14 @@ function EditSeriesModalContent({
     rootFolderPath: initialRootFolderPath,
   } = series;
 
-  const { pendingChanges, setPendingChange } = usePendingChangesStore<Series>(
-    {}
-  );
+  const { pendingChanges, setPendingChange, hasPendingChanges } =
+    usePendingChangesStore<Series>({}, series);
+  const { onClose, pendingChangesModalProps } = useUnsavedChanges({
+    hasUnsavedChanges: hasPendingChanges,
+    onDiscard: onModalClose,
+  });
+
+  useModalCloseGuard(onClose);
 
   const [isRootFolderModalOpen, setIsRootFolderModalOpen] = useState(false);
   const [rootFolderPath, setRootFolderPath] = useState(initialRootFolderPath);
@@ -253,7 +261,7 @@ function EditSeriesModalContent({
   }, [isSaving, wasSaving, saveError, onModalClose]);
 
   return (
-    <ModalContent onModalClose={onModalClose}>
+    <ModalContent onModalClose={onClose}>
       <ModalHeader>{translate('EditSeriesModalHeader', { title })}</ModalHeader>
 
       <ModalBody>
@@ -485,6 +493,8 @@ function EditSeriesModalContent({
         onSavePress={handleSavePress}
         onMoveSeriesPress={handleMoveSeriesPress}
       />
+
+      <PendingChangesModal {...pendingChangesModalProps} />
     </ModalContent>
   );
 }
