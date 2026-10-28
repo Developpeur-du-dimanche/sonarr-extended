@@ -2,9 +2,10 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define AppName "Sonarr"
-#define AppPublisher "Team Sonarr"
-#define AppURL "https://sonarr.tv/"
-#define ForumsURL "https://forums.sonarr.tv/"
+#define AppPublisher "Sonarr Extended"
+#define AppURL "https://github.com/Developpeur-du-dimanche/sonarr-extended"
+#define ForumsURL "https://github.com/Developpeur-du-dimanche/sonarr-extended/issues"
+#define ReleasesURL "https://github.com/Developpeur-du-dimanche/sonarr-extended/releases"
 #define AppExeName "Sonarr.exe"
 #define BuildNumber "4.0"
 #define BuildNumber GetEnv('SONARR_VERSION')
@@ -23,7 +24,7 @@ AppVersion={#MajorVersion}
 AppPublisher={#AppPublisher}
 AppPublisherURL={#AppURL}
 AppSupportURL={#ForumsURL}
-AppUpdatesURL={#AppURL}
+AppUpdatesURL={#ReleasesURL}
 UsePreviousAppDir=no
 DefaultDirName={commonappdata}\Sonarr\bin
 DisableDirPage=yes
