@@ -368,6 +368,8 @@
   "CustomFormatsSpecificationExceptLanguage": "Except Language",
   "CustomFormatsSpecificationExceptLanguageHelpText": "Matches if any language other than the selected language is present",
   "CustomFormatsSpecificationFlag": "Flag",
+  "CustomFormatsSpecificationIgnoreForcedSubtitles": "Ignore Forced Subtitles",
+  "CustomFormatsSpecificationIgnoreForcedSubtitlesHelpText": "Forced subtitle tracks are not taken into account",
   "CustomFormatsSpecificationLanguage": "Language",
   "CustomFormatsSpecificationMaximumSize": "Maximum Size",
   "CustomFormatsSpecificationMaximumSizeHelpText": "Release must be less than or equal to this size",

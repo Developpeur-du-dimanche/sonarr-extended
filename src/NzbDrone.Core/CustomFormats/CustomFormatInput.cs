@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NzbDrone.Core.Languages;
+using NzbDrone.Core.MediaFiles.MediaInfo;
 using NzbDrone.Core.Parser.Model;
 using NzbDrone.Core.Tv;
 
@@ -14,6 +15,7 @@ namespace NzbDrone.Core.CustomFormats
         public List<Language> Languages { get; set; }
         public string Filename { get; set; }
         public ReleaseType ReleaseType { get; set; }
+        public MediaInfoModel MediaInfo { get; set; }
 
         public CustomFormatInput()
         {

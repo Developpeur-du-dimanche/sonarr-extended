@@ -133,7 +133,8 @@ namespace NzbDrone.Core.CustomFormats
                 Languages = localEpisode.Languages,
                 IndexerFlags = localEpisode.IndexerFlags,
                 ReleaseType = localEpisode.ReleaseType,
-                Filename = fileName
+                Filename = fileName,
+                MediaInfo = localEpisode.MediaInfo
             };
 
             return ParseCustomFormat(input);
@@ -205,6 +206,7 @@ namespace NzbDrone.Core.CustomFormats
                 IndexerFlags = episodeFile.IndexerFlags,
                 ReleaseType = episodeFile.ReleaseType,
                 Filename = Path.GetFileName(episodeFile.RelativePath),
+                MediaInfo = episodeFile.MediaInfo
             };
 
             return ParseCustomFormat(input, allCustomFormats);
