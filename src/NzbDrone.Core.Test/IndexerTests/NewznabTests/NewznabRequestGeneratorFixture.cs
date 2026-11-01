@@ -7,6 +7,7 @@ using NzbDrone.Core.Indexers;
 using NzbDrone.Core.Indexers.Newznab;
 using NzbDrone.Core.IndexerSearch.Definitions;
 using NzbDrone.Core.Test.Framework;
+using NzbDrone.Core.Tv;
 
 namespace NzbDrone.Core.Test.IndexerTests.NewznabTests
 {
@@ -51,7 +52,7 @@ namespace NzbDrone.Core.Test.IndexerTests.NewznabTests
 
             _animeSearchCriteria = new AnimeEpisodeSearchCriteria()
             {
-                Series = new Tv.Series { TvRageId = 10, TvdbId = 20, TvMazeId = 30, ImdbId = "t40", TmdbId = 50 },
+                Series = new Tv.Series { TvRageId = 10, TvdbId = 20, TvMazeId = 30, ImdbId = "t40", TmdbId = 50, SeriesType = SeriesTypes.Anime },
                 SceneTitles = new List<string>() { "Monkey+Island" },
                 AbsoluteEpisodeNumber = 100,
                 SeasonNumber = 5,
@@ -60,7 +61,7 @@ namespace NzbDrone.Core.Test.IndexerTests.NewznabTests
 
             _animeSeasonSearchCriteria = new AnimeSeasonSearchCriteria()
             {
-                Series = new Tv.Series { TvRageId = 10, TvdbId = 20, TvMazeId = 30, ImdbId = "t40", TmdbId = 50 },
+                Series = new Tv.Series { TvRageId = 10, TvdbId = 20, TvMazeId = 30, ImdbId = "t40", TmdbId = 50, SeriesType = SeriesTypes.Anime },
                 SceneTitles = new List<string> { "Monkey Island" },
                 SeasonNumber = 3,
             };
@@ -109,6 +110,30 @@ namespace NzbDrone.Core.Test.IndexerTests.NewznabTests
 
             pages[0].Url.FullUri.Should().Contain("&cat=3,4&");
             pages[1].Url.FullUri.Should().Contain("&cat=3,4&");
+        }
+
+        [Test]
+        public void should_use_regular_categories_for_absolute_search_of_non_anime_series()
+        {
+            _animeSearchCriteria.Series.SeriesType = SeriesTypes.Standard;
+
+            var results = Subject.GetSearchRequests(_animeSearchCriteria);
+
+            var pages = results.GetAllTiers().Select(t => t.First()).ToList();
+
+            pages.Should().NotBeEmpty();
+            pages.Should().OnlyContain(p => p.Url.FullUri.Contains("&cat=1,2&"));
+        }
+
+        [Test]
+        public void should_not_yield_requests_for_absolute_search_when_categories_are_empty()
+        {
+            _animeSearchCriteria.Series.SeriesType = SeriesTypes.Standard;
+            Subject.Settings.Categories = new int[0];
+
+            var results = Subject.GetSearchRequests(_animeSearchCriteria);
+
+            results.GetAllTiers().SelectMany(t => t).Should().BeEmpty();
         }
 
         [Test]

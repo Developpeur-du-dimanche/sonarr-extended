@@ -16,7 +16,7 @@ function CircularProgressBar({
   containerClassName = styles.circularProgressBarContainer,
   size = 60,
   strokeWidth = 5,
-  strokeColor = '#35c5f4',
+  strokeColor = '#a855f7',
   showProgressText = false,
   progress,
 }: CircularProgressBarProps) {

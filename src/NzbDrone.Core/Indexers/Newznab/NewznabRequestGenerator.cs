@@ -407,8 +407,10 @@ namespace NzbDrone.Core.Indexers.Newznab
 
             if (SupportsSearch)
             {
+                var categories = GetSearchCategories(searchCriteria);
+
                 AddTvIdPageableRequests(pageableRequests,
-                    Settings.AnimeCategories,
+                    categories,
                     searchCriteria,
                     $"&q={searchCriteria.AbsoluteEpisodeNumber:00}");
 
@@ -419,7 +421,7 @@ namespace NzbDrone.Core.Indexers.Newznab
                 if (includeAnimeStandardFormatSearch && SupportsEpisodeSearch)
                 {
                     AddTvIdPageableRequests(pageableRequests,
-                        Settings.AnimeCategories,
+                        categories,
                         searchCriteria,
                         $"&season={NewznabifySeasonNumber(searchCriteria.SeasonNumber)}&ep={searchCriteria.EpisodeNumber}");
                 }
@@ -429,14 +431,14 @@ namespace NzbDrone.Core.Indexers.Newznab
                 foreach (var queryTitle in queryTitles)
                 {
                     pageableRequests.Add(GetPagedRequests(MaxPages,
-                        Settings.AnimeCategories,
+                        categories,
                         "search",
                         $"&q={NewsnabifyTitle(queryTitle)}+{searchCriteria.AbsoluteEpisodeNumber:00}"));
 
                     if (includeAnimeStandardFormatSearch && SupportsEpisodeSearch)
                     {
                         pageableRequests.Add(GetPagedRequests(MaxPages,
-                            Settings.AnimeCategories,
+                            categories,
                             "tvsearch",
                             $"&q={NewsnabifyTitle(queryTitle)}&season={NewznabifySeasonNumber(searchCriteria.SeasonNumber)}&ep={searchCriteria.EpisodeNumber}"));
                     }
@@ -457,11 +459,12 @@ namespace NzbDrone.Core.Indexers.Newznab
 
             var queryTitles = TextSearchEngine == "raw" ? searchCriteria.AllSceneTitles : searchCriteria.CleanSceneTitles;
             var seasonQueryTitles = TextSearchEngine == "raw" ? searchCriteria.AllSeasonSceneTitles : searchCriteria.CleanSeasonSceneTitles;
+            var categories = GetSearchCategories(searchCriteria);
 
             if (Settings.AnimeStandardFormatSearch)
             {
                 AddTvIdPageableRequests(pageableRequests,
-                    Settings.AnimeCategories,
+                    categories,
                     searchCriteria,
                     $"&season={NewznabifySeasonNumber(searchCriteria.SeasonNumber)}");
             }
@@ -472,14 +475,14 @@ namespace NzbDrone.Core.Indexers.Newznab
                 {
                     // A season title alias already identifies the season, no need to add a season number.
                     pageableRequests.Add(GetPagedRequests(MaxPages,
-                        Settings.AnimeCategories,
+                        categories,
                         "search",
                         $"&q={NewsnabifyTitle(queryTitle)}"));
                 }
                 else if (Settings.AnimeStandardFormatSearch)
                 {
                     pageableRequests.Add(GetPagedRequests(MaxPages,
-                        Settings.AnimeCategories,
+                        categories,
                         "tvsearch",
                         $"&q={NewsnabifyTitle(queryTitle)}&season={NewznabifySeasonNumber(searchCriteria.SeasonNumber)}"));
                 }

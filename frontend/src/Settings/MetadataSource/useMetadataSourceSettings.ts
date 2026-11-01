@@ -7,6 +7,7 @@ import {
 
 export interface MetadataSourceSettingsModel {
   preferredMetadataLanguage: number;
+  tmdbApiKey: string;
 }
 
 const PATH = '/settings/metadata';
