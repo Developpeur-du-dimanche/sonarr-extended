@@ -25,9 +25,12 @@ Sonarr Extended is an unofficial fork of [Sonarr](https://github.com/Sonarr/Sona
 - **Manual series aliases**: add your own alternate titles to a series, on top of the ones Sonarr gets from its scene mapping providers, to match releases and search indexers
 - **Aliases per season**: limit an alias to one season, and set the season number releases use when it differs (for example an anthology season released as season 1)
 - **Search by absolute episode number**: per-series option to also search indexers by absolute number, for series released with absolute numbering that are not tagged as anime
+- **Custom formats on audio and subtitle tracks**: new conditions on the language (optionally ignoring forced subtitles) and on the title (regular expression) of a file's audio and subtitle tracks, read from its media info
 - **Docker image**: built from this repository by the [Docker](.github/workflows/docker.yml) workflow
 
 Changing the episode order of a series refreshes it. Existing files stay linked to the episode with the same season and episode number, so check them after switching.
+
+Track conditions only apply to files on disk or being imported: releases from indexers have no media info, so these conditions never match them, even when negated.
 
 Everything else comes from Sonarr: see [Sonarr's features](https://github.com/Sonarr/Sonarr#features).
 
