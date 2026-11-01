@@ -31,6 +31,12 @@ runs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v6
 
+    - name: Setup Postgres
+      if: ${{ inputs.use_postgres }}
+      uses: ikalnytskyi/action-setup-postgres@v9
+      with:
+        postgres-version: ${{ inputs.postgres-version }}
+
     - name: Setup Test Variables
       shell: bash
       run: |
