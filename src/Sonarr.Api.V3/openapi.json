@@ -8900,6 +8900,13 @@
         ],
         "type": "string"
       },
+      "EpisodeOrderType": {
+        "enum": [
+          "tvdb",
+          "tmdb"
+        ],
+        "type": "string"
+      },
       "EpisodeResource": {
         "type": "object",
         "properties": {
@@ -12304,6 +12311,9 @@
           "seasonFolder": {
             "type": "boolean"
           },
+          "searchByAbsoluteNumber": {
+            "type": "boolean"
+          },
           "monitored": {
             "type": "boolean"
           },
@@ -12312,6 +12322,13 @@
           },
           "useSceneNumbering": {
             "type": "boolean"
+          },
+          "episodeOrder": {
+            "$ref": "#/components/schemas/EpisodeOrderType"
+          },
+          "tmdbEpisodeGroupId": {
+            "type": "string",
+            "nullable": true
           },
           "runtime": {
             "type": "integer",
