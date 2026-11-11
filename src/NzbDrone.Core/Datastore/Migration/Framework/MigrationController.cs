@@ -11,6 +11,8 @@ using FluentMigrator.Runner.VersionTableInfo;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using NLog.Extensions.Logging;
+using Npgsql;
+using NzbDrone.Common.Extensions;
 
 namespace NzbDrone.Core.Datastore.Migration.Framework
 {
@@ -32,7 +34,7 @@ namespace NzbDrone.Core.Datastore.Migration.Framework
         {
             var sw = Stopwatch.StartNew();
 
-            _logger.Info("*** Migrating {0} ***", connectionString);
+            _logger.Info("*** Migrating {0} ***", GetLoggableConnectionString(connectionString, databaseType));
 
             var db = databaseType switch
             {
@@ -89,6 +91,23 @@ namespace NzbDrone.Core.Datastore.Migration.Framework
             sw.Stop();
 
             _logger.Debug("Took: {0}", sw.Elapsed);
+        }
+
+        private static string GetLoggableConnectionString(string connectionString, DatabaseType databaseType)
+        {
+            if (databaseType != DatabaseType.PostgreSQL)
+            {
+                return connectionString;
+            }
+
+            var builder = new NpgsqlConnectionStringBuilder(connectionString);
+
+            if (builder.Password.IsNotNullOrWhiteSpace())
+            {
+                builder.Password = "(removed)";
+            }
+
+            return builder.ConnectionString;
         }
 
         // Has to happen before the runner loads the applied versions, otherwise an upstream migration
