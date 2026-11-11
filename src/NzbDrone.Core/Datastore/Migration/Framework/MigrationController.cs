@@ -1,11 +1,13 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using FluentMigrator;
 using FluentMigrator.Runner;
 using FluentMigrator.Runner.Generators;
 using FluentMigrator.Runner.Initialization;
 using FluentMigrator.Runner.Processors;
+using FluentMigrator.Runner.VersionTableInfo;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using NLog.Extensions.Logging;
@@ -68,6 +70,8 @@ namespace NzbDrone.Core.Datastore.Migration.Framework
 
             using (var scope = serviceProvider.CreateScope())
             {
+                ReleaseUpstreamVersionsUsedByFork(scope.ServiceProvider);
+
                 var runner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
 
                 MigrationContext.Current = migrationContext;
@@ -104,6 +108,24 @@ namespace NzbDrone.Core.Datastore.Migration.Framework
             }
 
             return builder.ConnectionString;
+        }
+
+        // Has to happen before the runner loads the applied versions, otherwise an upstream migration
+        // reusing one of these versions is skipped for this run.
+        private void ReleaseUpstreamVersionsUsedByFork(IServiceProvider serviceProvider)
+        {
+            var processor = serviceProvider.GetRequiredService<IProcessorAccessor>().Processor;
+            var versionTable = serviceProvider.GetRequiredService<IVersionTableMetaData>();
+
+            if (!processor.TableExists(versionTable.SchemaName, versionTable.TableName))
+            {
+                return;
+            }
+
+            var conditions = ForkMigrationVersions.ReleasedUpstreamVersions
+                .Select(v => $"(\"{versionTable.ColumnName}\" = {v.Key} AND \"{versionTable.DescriptionColumnName}\" = '{v.Value}')");
+
+            processor.Execute($"DELETE FROM \"{versionTable.TableName}\" WHERE {string.Join(" OR ", conditions)}");
         }
     }
 }

@@ -4,6 +4,7 @@ import Language from 'Language/Language';
 import Quality from 'Quality/Quality';
 
 export type SeriesType = 'anime' | 'daily' | 'standard';
+export type EpisodeOrder = 'tvdb' | 'tmdb';
 export type SeriesMonitor =
   | 'all'
   | 'future'
@@ -63,6 +64,12 @@ export interface AlternateTitle {
   comment?: string;
 }
 
+export interface SeriesAlias {
+  title: string;
+  seasonNumber?: number | null;
+  sceneSeasonNumber?: number | null;
+}
+
 export interface SeriesAddOptions {
   monitor: SeriesMonitor;
   searchForMissingEpisodes: boolean;
@@ -84,6 +91,7 @@ export interface SeasonType {
 
 interface Series extends ModelBase {
   added: string;
+  aliases?: SeriesAlias[];
   alternateTitles: AlternateTitle[];
   certification: string;
   cleanTitle: string;
@@ -108,6 +116,7 @@ interface Series extends ModelBase {
   ratings: Ratings;
   rootFolderPath: string;
   runtime: number;
+  searchByAbsoluteNumber: boolean;
   seasonFolder: boolean;
   seasons: Season[];
   seriesType: SeriesType;
@@ -126,6 +135,8 @@ interface Series extends ModelBase {
   seasonType: string;
   seasonTypes: SeasonType[];
   translations: Translation[];
+  episodeOrder: EpisodeOrder;
+  tmdbEpisodeGroupId?: string | null;
   year: number;
   addOptions: SeriesAddOptions;
 }

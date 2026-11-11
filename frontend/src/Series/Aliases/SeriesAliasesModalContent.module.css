@@ -1,0 +1,15 @@
+.noAliases {
+  margin: 20px 0;
+  color: var(--disabledColor);
+  text-align: center;
+}
+
+.addAlias {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.sceneMappingInfo {
+  margin-top: 8px;
+}
