@@ -417,9 +417,7 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
 
         try
         {
-            var existingSeries = _seriesService.FindByTitle(alias);
-
-            if (existingSeries != null && existingSeries.Id != resource.Id)
+            if (_seriesService.FindAllByTitle(alias).Any(s => s.Id != resource.Id))
             {
                 return true;
             }
@@ -427,10 +425,6 @@ public class SeriesController : RestControllerWithSignalR<SeriesResource, NzbDro
             var tvdbId = _sceneMappingService.FindTvdbId(alias, null, -1);
 
             return tvdbId.HasValue && tvdbId.Value != resource.TvdbId;
-        }
-        catch (MultipleSeriesFoundException)
-        {
-            return true;
         }
         catch (InvalidSceneMappingException)
         {
